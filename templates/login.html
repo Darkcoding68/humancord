@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>ANONIM</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body class="login-body">
+
+<div class="background-grid"></div>
+
+<div class="glow glow-one"></div>
+<div class="glow glow-two"></div>
+
+<main class="login-screen">
+
+    <div class="brand-large">
+        <div class="brand-icon">
+            A
+        </div>
+
+        <div>
+            <div class="brand-name">
+                ANONIM
+            </div>
+
+            <div class="brand-small">
+                PRIVATE SOCIAL SPACE
+            </div>
+        </div>
+    </div>
+
+    <section class="login-box">
+
+        <div class="login-line"></div>
+
+        <div class="login-tag">
+            ● SYSTEM ONLINE
+        </div>
+
+        <h1>
+            Buraya<br>
+            <span>senin adınla</span> gir.
+        </h1>
+
+        <p>
+            Hesap yok. Şifre yok.
+            Sadece bir kullanıcı adı seç ve sohbete katıl.
+        </p>
+
+        <form action="/login" method="POST">
+
+            <label>
+                KULLANICI ADI
+            </label>
+
+            <div class="username-input">
+
+                <span>@</span>
+
+                <input
+                    type="text"
+                    name="username"
+                    maxlength="20"
+                    autocomplete="off"
+                    spellcheck="false"
+                    placeholder="kullanıcı adın"
+                    required
+                >
+
+            </div>
+
+            <button class="enter-button">
+                <span>SOHBETE GİR</span>
+                <b>→</b>
+            </button>
+
+        </form>
+
+        <div class="login-bottom">
+
+            <span>CHAT</span>
+            <i></i>
+            <span>VOICE</span>
+            <i></i>
+            <span>VIDEO</span>
+
+        </div>
+
+    </section>
+
+</main>
+
+</body>
+</html>
