@@ -437,6 +437,7 @@
     let localStream = null;
     let callPeerSid = null;
     let pendingIncomingCall = null;
+    let queuedIceCandidates = [];
     let micOn = true;
     let camOn = true;
 
@@ -583,12 +584,28 @@
                 remoteAudio.srcObject = event.streams[0];
             }
         };
+
+        peerConnection.onconnectionstatechange = () => {
+            if (peerConnection.connectionState === "connected") {
+                // Video track varsa placeholder zaten ontrack ile gizlendi.
+                // Sesli aramada video hiç gelmeyeceği için yazıyı burada güncelliyoruz.
+                if (remoteVideo.style.display !== "block") {
+                    remotePlaceholder.textContent = "Bağlandı";
+                }
+            } else if (
+                peerConnection.connectionState === "failed" ||
+                peerConnection.connectionState === "disconnected"
+            ) {
+                remotePlaceholder.textContent = "Bağlantı koptu...";
+            }
+        };
     }
 
     function openCallOverlay(withVideo) {
         callTitle.textContent = withVideo ? "Görüntülü Arama" : "Sesli Arama";
         remoteVideo.style.display = "none";
         remotePlaceholder.style.display = "flex";
+        remotePlaceholder.textContent = "Bağlanıyor...";
         localVideo.style.display = withVideo ? "block" : "none";
         callOverlay.classList.add("show");
     }
@@ -663,6 +680,17 @@
         localVideo.srcObject = localStream;
 
         await peerConnection.setRemoteDescription(new RTCSessionDescription(call.offer));
+
+        // Kabul'e basılmadan önce kuyruğa alınmış ICE candidate'ları şimdi ekle.
+        for (const candidate of queuedIceCandidates) {
+            try {
+                await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+            } catch (err) {
+                console.error("Kuyruktaki ICE candidate eklenemedi:", err);
+            }
+        }
+        queuedIceCandidates = [];
+
         const answer = await peerConnection.createAnswer();
         await peerConnection.setLocalDescription(answer);
 
@@ -686,7 +714,12 @@
     });
 
     socket.on("ice_candidate", async (data) => {
-        if (!peerConnection) return;
+        if (!peerConnection) {
+            // Karşı taraf henüz "Kabul Et"e basmadıysa peerConnection henüz yok.
+            // Candidate'ı kaybetmemek için kabul edilene kadar kuyruğa alıyoruz.
+            queuedIceCandidates.push(data.candidate);
+            return;
+        }
 
         try {
             await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
@@ -728,6 +761,7 @@
         }
 
         callPeerSid = null;
+        queuedIceCandidates = [];
         micOn = true;
         camOn = true;
 
