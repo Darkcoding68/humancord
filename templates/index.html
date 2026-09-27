@@ -429,7 +429,21 @@
     const socket = io();
 
     const ICE_SERVERS = {
-        iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
+        iceServers: [
+            { urls: "stun:stun.l.google.com:19302" },
+            // NOT: Bu TURN sunucusu herkese açık, ücretsiz bir TEST sunucusudur.
+            // Kararlı/production kullanım için kendi TURN hesabınızı (Metered, Twilio,
+            // Xirsys veya kendi coturn sunucunuz) alıp bu bilgileri değiştirmeniz gerekir.
+            {
+                urls: [
+                    "turn:openrelay.metered.ca:80",
+                    "turn:openrelay.metered.ca:443",
+                    "turn:openrelay.metered.ca:443?transport=tcp"
+                ],
+                username: "openrelayproject",
+                credential: "openrelayproject"
+            }
+        ]
     };
 
     let knownUsers = [];
@@ -576,6 +590,8 @@
         };
 
         peerConnection.ontrack = (event) => {
+            console.log("ontrack:", event.track.kind, event.track.readyState, event.streams[0] && event.streams[0].id);
+
             if (event.track.kind === "video") {
                 remoteVideo.srcObject = event.streams[0];
                 remoteVideo.style.display = "block";
@@ -630,6 +646,14 @@
             peerConnection.addTrack(track, localStream);
         });
         localVideo.srcObject = localStream;
+
+        // Bazı durumlarda transceiver yönü beklenmedik şekilde tek yönlü kalabiliyor;
+        // gönderdiğimiz her track için açıkça iki yönlü olduğunu garanti ediyoruz.
+        peerConnection.getTransceivers().forEach((t) => {
+            if (t.sender && t.sender.track) {
+                t.direction = "sendrecv";
+            }
+        });
 
         const offer = await peerConnection.createOffer();
         await peerConnection.setLocalDescription(offer);
@@ -690,6 +714,13 @@
             }
         }
         queuedIceCandidates = [];
+
+        // Aynı önlemi kabul eden taraf için de uyguluyoruz.
+        peerConnection.getTransceivers().forEach((t) => {
+            if (t.sender && t.sender.track) {
+                t.direction = "sendrecv";
+            }
+        });
 
         const answer = await peerConnection.createAnswer();
         await peerConnection.setLocalDescription(answer);
