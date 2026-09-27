@@ -138,6 +138,7 @@ def handle_message(data):
 def call_user(data):
     target = data.get("target")
     offer = data.get("offer")
+    call_type = data.get("type", "voice")
 
     if not target or not offer:
         return
@@ -174,7 +175,8 @@ def call_user(data):
         {
             "from": request.sid,
             "username": username[:20],
-            "offer": offer
+            "offer": offer,
+            "type": call_type
         },
         to=target
     )
