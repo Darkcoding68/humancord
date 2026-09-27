@@ -2,7 +2,21 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    >
+
+    <meta
+        name="mobile-web-app-capable"
+        content="yes"
+    >
+
+    <meta
+        name="apple-mobile-web-app-capable"
+        content="yes"
+    >
 
     <title>ANONIM — Chat</title>
 
@@ -15,18 +29,27 @@
 
         html,
         body {
-            margin: 0;
-            padding: 0;
             width: 100%;
             height: 100%;
-            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
             background: #080808;
             color: white;
+            font-family: Arial, Helvetica, sans-serif;
             overflow: hidden;
         }
 
-        button {
+        body {
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        button,
+        input {
             font-family: inherit;
+        }
+
+        button {
+            touch-action: manipulation;
         }
 
         .app {
@@ -39,16 +62,16 @@
         .topbar {
             height: 64px;
             min-height: 64px;
-            background: #101010;
-            border-bottom: 1px solid #292929;
+            padding: 0 20px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 20px;
+            background: #101010;
+            border-bottom: 1px solid #292929;
         }
 
         .logo {
-            font-size: 22px;
+            font-size: 21px;
             font-weight: 800;
             letter-spacing: 2px;
         }
@@ -82,8 +105,8 @@
         }
 
         #userList {
-            overflow-y: auto;
             flex: 1;
+            overflow-y: auto;
         }
 
         .user {
@@ -105,13 +128,21 @@
 
         .user-status {
             margin-top: 4px;
-            font-size: 11px;
             color: #777;
+            font-size: 11px;
+        }
+
+        .empty {
+            padding: 30px 15px;
+            color: #666;
+            text-align: center;
+            font-size: 13px;
         }
 
         .chat-area {
             flex: 1;
             min-width: 0;
+            min-height: 0;
             display: flex;
             flex-direction: column;
         }
@@ -124,41 +155,41 @@
         }
 
         .message {
-            margin-bottom: 14px;
             max-width: 800px;
+            margin-bottom: 14px;
         }
 
         .message-user {
-            font-size: 12px;
-            color: #777;
             margin-bottom: 4px;
+            color: #777;
+            font-size: 12px;
         }
 
         .message-text {
             display: inline-block;
+            padding: 10px 13px;
             background: #151515;
             border: 1px solid #252525;
-            padding: 10px 13px;
             border-radius: 12px;
             word-break: break-word;
         }
 
         .input-area {
-            padding: 14px;
-            border-top: 1px solid #292929;
             display: flex;
             gap: 10px;
+            padding: 14px;
             background: #0d0d0d;
+            border-top: 1px solid #292929;
         }
 
         #messageInput {
             flex: 1;
             min-width: 0;
+            padding: 13px;
             background: #171717;
             border: 1px solid #292929;
-            color: white;
-            padding: 13px;
             border-radius: 10px;
+            color: white;
             outline: none;
         }
 
@@ -167,22 +198,77 @@
         }
 
         #sendButton {
-            border: 0;
+            padding: 0 20px;
             background: white;
             color: black;
-            padding: 0 20px;
+            border: 0;
             border-radius: 10px;
             cursor: pointer;
             font-weight: 700;
+        }
+
+        .incoming-call {
+            position: fixed;
+            left: 50%;
+            top: 25px;
+            transform: translateX(-50%);
+            width: min(400px, calc(100% - 30px));
+            z-index: 2000;
+            display: none;
+            padding: 20px;
+            background: #151515;
+            border: 1px solid #333;
+            border-radius: 15px;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        .incoming-call.active {
+            display: block;
+        }
+
+        .incoming-title {
+            margin-bottom: 5px;
+            font-size: 17px;
+            font-weight: 700;
+        }
+
+        .incoming-text {
+            margin-bottom: 18px;
+            color: #999;
+            font-size: 13px;
+        }
+
+        .incoming-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .incoming-buttons button {
+            flex: 1;
+            height: 42px;
+            border: 0;
+            border-radius: 9px;
+            cursor: pointer;
+            font-weight: 700;
+        }
+
+        #acceptCallButton {
+            background: white;
+            color: black;
+        }
+
+        #rejectCallButton {
+            background: #272727;
+            color: white;
         }
 
         .call-panel {
             position: fixed;
             inset: 0;
             z-index: 1000;
-            background: rgba(0, 0, 0, 0.96);
             display: none;
             flex-direction: column;
+            background: #000;
         }
 
         .call-panel.active {
@@ -192,12 +278,12 @@
         .call-header {
             height: 64px;
             min-height: 64px;
+            padding: 0 20px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 20px;
-            border-bottom: 1px solid #292929;
             background: #0d0d0d;
+            border-bottom: 1px solid #292929;
         }
 
         .call-title {
@@ -205,28 +291,31 @@
         }
 
         .call-type {
+            margin-top: 3px;
             color: #888;
             font-size: 12px;
-            margin-top: 3px;
         }
 
         .videos {
+            position: relative;
             flex: 1;
             min-height: 0;
-            position: relative;
+            overflow: hidden;
             background: #050505;
             display: flex;
             align-items: center;
             justify-content: center;
-            overflow: hidden;
         }
 
         #remoteVideo {
+            position: absolute;
+            inset: 0;
             width: 100%;
             height: 100%;
             object-fit: contain;
             background: #050505;
             display: none;
+            z-index: 1;
         }
 
         #localVideo {
@@ -240,13 +329,14 @@
             background: #111;
             border: 2px solid #444;
             border-radius: 12px;
-            z-index: 3;
             display: none;
+            z-index: 5;
         }
 
         .remote-placeholder {
             position: absolute;
             inset: 0;
+            z-index: 2;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -256,31 +346,33 @@
         }
 
         .remote-placeholder-icon {
-            font-size: 60px;
             margin-bottom: 15px;
+            font-size: 60px;
         }
 
         .remote-placeholder-text {
             font-size: 15px;
+            text-align: center;
         }
 
         .call-controls {
             min-height: 92px;
+            padding: 15px;
             display: flex;
-            justify-content: center;
             align-items: center;
+            justify-content: center;
             gap: 12px;
             background: #0d0d0d;
             border-top: 1px solid #292929;
-            padding: 15px;
         }
 
         .control-button {
             min-width: 85px;
             height: 60px;
-            border: 1px solid #303030;
+            padding: 5px 10px;
             background: #181818;
             color: white;
+            border: 1px solid #303030;
             border-radius: 12px;
             cursor: pointer;
             display: flex;
@@ -316,71 +408,16 @@
             font-size: 11px;
         }
 
-        .incoming-call {
-            position: fixed;
-            left: 50%;
-            top: 25px;
-            transform: translateX(-50%);
-            z-index: 2000;
-            width: min(400px, calc(100% - 30px));
-            background: #151515;
-            border: 1px solid #333;
-            border-radius: 15px;
-            padding: 20px;
-            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.5);
-            display: none;
-        }
-
-        .incoming-call.active {
-            display: block;
-        }
-
-        .incoming-title {
-            font-size: 17px;
-            font-weight: 700;
-            margin-bottom: 5px;
-        }
-
-        .incoming-text {
-            color: #999;
-            font-size: 13px;
-            margin-bottom: 18px;
-        }
-
-        .incoming-buttons {
-            display: flex;
-            gap: 10px;
-        }
-
-        .incoming-buttons button {
-            flex: 1;
-            height: 42px;
-            border: 0;
-            border-radius: 9px;
-            cursor: pointer;
-            font-weight: 700;
-        }
-
-        #acceptCallButton {
-            background: #fff;
-            color: #000;
-        }
-
-        #rejectCallButton {
-            background: #272727;
-            color: #fff;
-        }
-
         .toast {
             position: fixed;
             right: 20px;
             bottom: 20px;
+            z-index: 3000;
+            padding: 12px 16px;
             background: #171717;
             border: 1px solid #333;
-            padding: 12px 16px;
             border-radius: 10px;
             color: white;
-            z-index: 3000;
             opacity: 0;
             transform: translateY(10px);
             pointer-events: none;
@@ -392,31 +429,77 @@
             transform: translateY(0);
         }
 
-        .empty {
-            color: #666;
-            text-align: center;
-            padding: 30px 15px;
-            font-size: 13px;
-        }
-
         @media (max-width: 700px) {
+
+            .topbar {
+                height: 56px;
+                min-height: 56px;
+                padding: 0 14px;
+            }
+
             .sidebar {
-                width: 190px;
-                min-width: 190px;
+                width: 170px;
+                min-width: 170px;
+            }
+
+            .sidebar-title {
+                padding: 14px 10px;
+                font-size: 11px;
+            }
+
+            #messages {
+                padding: 12px;
+            }
+
+            .input-area {
+                padding: 8px;
+            }
+
+            #sendButton {
+                padding: 0 14px;
             }
 
             #localVideo {
-                width: 150px;
                 right: 10px;
                 bottom: 10px;
+                width: 145px;
+                max-width: 42vw;
+                border-radius: 9px;
+            }
+
+            .call-header {
+                height: 55px;
+                min-height: 55px;
+                padding: 0 12px;
             }
 
             .call-controls {
-                gap: 6px;
+                min-height: 82px;
+                padding: 8px 5px;
+                gap: 5px;
             }
 
             .control-button {
-                min-width: 68px;
+                min-width: 67px;
+                height: 58px;
+                padding: 3px;
+            }
+
+            .control-icon {
+                font-size: 18px;
+            }
+
+            .control-text {
+                font-size: 9px;
+            }
+
+            .remote-placeholder-icon {
+                font-size: 45px;
+            }
+
+            .remote-placeholder-text {
+                padding: 0 20px;
+                font-size: 13px;
             }
         }
     </style>
@@ -427,31 +510,44 @@
 <div class="app">
 
     <div class="topbar">
-        <div class="logo">ANONIM</div>
+
+        <div class="logo">
+            ANONIM
+        </div>
+
         <div class="username">
             {{ username }}
         </div>
+
     </div>
+
 
     <div class="main">
 
         <aside class="sidebar">
+
             <div class="sidebar-title">
                 Çevrimiçi kullanıcılar
             </div>
 
             <div id="userList">
+
                 <div class="empty">
                     Kullanıcılar yükleniyor...
                 </div>
+
             </div>
+
         </aside>
+
 
         <section class="chat-area">
 
             <div id="messages"></div>
 
+
             <div class="input-area">
+
                 <input
                     id="messageInput"
                     type="text"
@@ -466,6 +562,7 @@
                 >
                     Gönder
                 </button>
+
             </div>
 
         </section>
@@ -487,12 +584,14 @@
         Gelen arama
     </div>
 
+
     <div
         id="incomingText"
         class="incoming-text"
     >
         Bir kullanıcı seni arıyor.
     </div>
+
 
     <div class="incoming-buttons">
 
@@ -502,6 +601,7 @@
         >
             Kabul Et
         </button>
+
 
         <button
             id="rejectCallButton"
@@ -523,6 +623,7 @@
     <div class="call-header">
 
         <div>
+
             <div
                 id="callTitle"
                 class="call-title"
@@ -530,12 +631,14 @@
                 Arama
             </div>
 
+
             <div
                 id="callType"
                 class="call-type"
             >
                 Video araması
             </div>
+
         </div>
 
     </div>
@@ -547,6 +650,7 @@
             id="remotePlaceholder"
             class="remote-placeholder"
         >
+
             <div class="remote-placeholder-icon">
                 👤
             </div>
@@ -554,6 +658,7 @@
             <div class="remote-placeholder-text">
                 Karşı tarafın görüntüsü bekleniyor...
             </div>
+
         </div>
 
 
@@ -561,6 +666,8 @@
             id="remoteVideo"
             autoplay
             playsinline
+            webkit-playsinline
+            preload="auto"
         ></video>
 
 
@@ -569,6 +676,7 @@
             autoplay
             muted
             playsinline
+            webkit-playsinline
         ></video>
 
     </div>
@@ -581,6 +689,7 @@
             class="control-button"
             type="button"
         >
+
             <span class="control-icon">
                 🎤
             </span>
@@ -591,6 +700,7 @@
             >
                 Mikrofon
             </span>
+
         </button>
 
 
@@ -599,6 +709,7 @@
             class="control-button"
             type="button"
         >
+
             <span class="control-icon">
                 📷
             </span>
@@ -609,6 +720,7 @@
             >
                 Kamera
             </span>
+
         </button>
 
 
@@ -617,6 +729,7 @@
             class="control-button"
             type="button"
         >
+
             <span class="control-icon">
                 🖥️
             </span>
@@ -624,6 +737,7 @@
             <span class="control-text">
                 Ekran
             </span>
+
         </button>
 
 
@@ -632,6 +746,7 @@
             class="control-button danger"
             type="button"
         >
+
             <span class="control-icon">
                 ☎️
             </span>
@@ -639,6 +754,7 @@
             <span class="control-text">
                 Kapat
             </span>
+
         </button>
 
     </div>
@@ -664,51 +780,75 @@ const socket = io();
 
 const currentUsername = {{ username|tojson }};
 
-const userList = document.getElementById("userList");
 
-const messages = document.getElementById("messages");
+const userList =
+    document.getElementById("userList");
 
-const messageInput = document.getElementById("messageInput");
+const messages =
+    document.getElementById("messages");
 
-const sendButton = document.getElementById("sendButton");
+const messageInput =
+    document.getElementById("messageInput");
 
-const incomingCall = document.getElementById("incomingCall");
+const sendButton =
+    document.getElementById("sendButton");
 
-const incomingTitle = document.getElementById("incomingTitle");
+const incomingCall =
+    document.getElementById("incomingCall");
 
-const incomingText = document.getElementById("incomingText");
+const incomingTitle =
+    document.getElementById("incomingTitle");
 
-const acceptCallButton = document.getElementById("acceptCallButton");
+const incomingText =
+    document.getElementById("incomingText");
 
-const rejectCallButton = document.getElementById("rejectCallButton");
+const acceptCallButton =
+    document.getElementById("acceptCallButton");
 
-const callPanel = document.getElementById("callPanel");
+const rejectCallButton =
+    document.getElementById("rejectCallButton");
 
-const callTitle = document.getElementById("callTitle");
+const callPanel =
+    document.getElementById("callPanel");
 
-const callType = document.getElementById("callType");
+const callTitle =
+    document.getElementById("callTitle");
 
-const remoteVideo = document.getElementById("remoteVideo");
+const callType =
+    document.getElementById("callType");
 
-const localVideo = document.getElementById("localVideo");
+const remoteVideo =
+    document.getElementById("remoteVideo");
 
-const remoteAudio = document.getElementById("remoteAudio");
+const localVideo =
+    document.getElementById("localVideo");
 
-const remotePlaceholder = document.getElementById("remotePlaceholder");
+const remoteAudio =
+    document.getElementById("remoteAudio");
 
-const micButton = document.getElementById("micButton");
+const remotePlaceholder =
+    document.getElementById("remotePlaceholder");
 
-const micText = document.getElementById("micText");
+const micButton =
+    document.getElementById("micButton");
 
-const cameraButton = document.getElementById("cameraButton");
+const micText =
+    document.getElementById("micText");
 
-const cameraText = document.getElementById("cameraText");
+const cameraButton =
+    document.getElementById("cameraButton");
 
-const screenButton = document.getElementById("screenButton");
+const cameraText =
+    document.getElementById("cameraText");
 
-const endCallButton = document.getElementById("endCallButton");
+const screenButton =
+    document.getElementById("screenButton");
 
-const toast = document.getElementById("toast");
+const endCallButton =
+    document.getElementById("endCallButton");
+
+const toast =
+    document.getElementById("toast");
 
 
 let peerConnection = null;
@@ -731,9 +871,9 @@ let cameraTrack = null;
 
 let screenTrack = null;
 
-let videoTransceiver = null;
-
 let audioTransceiver = null;
+
+let videoTransceiver = null;
 
 let videoSender = null;
 
@@ -745,14 +885,19 @@ let cameraEnabled = true;
 
 
 const rtcConfig = {
+
     iceServers: [
+
         {
             urls: "stun:stun.l.google.com:19302"
         },
+
         {
             urls: "stun:stun1.l.google.com:19302"
         }
+
     ]
+
 };
 
 
@@ -763,28 +908,42 @@ function showToast(message) {
     toast.classList.add("show");
 
     setTimeout(() => {
+
         toast.classList.remove("show");
+
     }, 2500);
+
 }
 
 
 function addMessage(username, message) {
 
-    const wrapper = document.createElement("div");
+    const wrapper =
+        document.createElement("div");
 
-    wrapper.className = "message";
+    wrapper.className =
+        "message";
 
-    const user = document.createElement("div");
 
-    user.className = "message-user";
+    const user =
+        document.createElement("div");
 
-    user.textContent = username;
+    user.className =
+        "message-user";
 
-    const text = document.createElement("div");
+    user.textContent =
+        username;
 
-    text.className = "message-text";
 
-    text.textContent = message;
+    const text =
+        document.createElement("div");
+
+    text.className =
+        "message-text";
+
+    text.textContent =
+        message;
+
 
     wrapper.appendChild(user);
 
@@ -792,7 +951,10 @@ function addMessage(username, message) {
 
     messages.appendChild(wrapper);
 
-    messages.scrollTop = messages.scrollHeight;
+
+    messages.scrollTop =
+        messages.scrollHeight;
+
 }
 
 
@@ -800,102 +962,157 @@ function renderUsers(users) {
 
     userList.innerHTML = "";
 
-    const filtered = users.filter(user => {
-        return user.username !== currentUsername;
-    });
+
+    const filtered =
+        users.filter(user => {
+
+            return user.username !==
+                currentUsername;
+
+        });
+
 
     if (filtered.length === 0) {
 
-        const empty = document.createElement("div");
+        const empty =
+            document.createElement("div");
 
-        empty.className = "empty";
+        empty.className =
+            "empty";
 
-        empty.textContent = "Başka kullanıcı yok.";
+        empty.textContent =
+            "Başka kullanıcı yok.";
 
         userList.appendChild(empty);
 
         return;
+
     }
+
 
     filtered.forEach(user => {
 
-        const element = document.createElement("div");
+        const element =
+            document.createElement("div");
 
-        element.className = "user";
+        element.className =
+            "user";
 
-        const name = document.createElement("div");
 
-        name.className = "user-name";
+        const name =
+            document.createElement("div");
 
-        name.textContent = user.username;
+        name.className =
+            "user-name";
 
-        const status = document.createElement("div");
+        name.textContent =
+            user.username;
 
-        status.className = "user-status";
 
-        status.textContent = "Çevrimiçi";
+        const status =
+            document.createElement("div");
+
+        status.className =
+            "user-status";
+
+        status.textContent =
+            "Çevrimiçi";
+
 
         element.appendChild(name);
 
         element.appendChild(status);
 
-        element.addEventListener("click", () => {
 
-            if (currentCallTarget) {
+        element.addEventListener(
+            "click",
+            () => {
 
-                showToast("Zaten bir aramadasın.");
+                if (peerConnection) {
 
-                return;
+                    showToast(
+                        "Zaten bir aramadasın."
+                    );
+
+                    return;
+
+                }
+
+
+                startCall(
+                    user.sid,
+                    "video"
+                );
+
             }
+        );
 
-            startCall(user.sid, "video");
-
-        });
 
         userList.appendChild(element);
 
     });
+
 }
 
 
-socket.on("connect", () => {
+socket.on(
+    "connect",
+    () => {
 
-    console.log("Socket bağlantısı kuruldu:", socket.id);
+        console.log(
+            "SOCKET CONNECTED:",
+            socket.id
+        );
 
-});
-
-
-socket.on("disconnect", () => {
-
-    console.log("Socket bağlantısı kesildi.");
-
-});
-
-
-socket.on("user_list", users => {
-
-    renderUsers(users);
-
-});
+    }
+);
 
 
-socket.on("message", data => {
+socket.on(
+    "disconnect",
+    () => {
 
-    addMessage(
-        data.username,
-        data.message
-    );
+        console.log(
+            "SOCKET DISCONNECTED"
+        );
 
-});
+    }
+);
+
+
+socket.on(
+    "user_list",
+    users => {
+
+        renderUsers(users);
+
+    }
+);
+
+
+socket.on(
+    "message",
+    data => {
+
+        addMessage(
+            data.username,
+            data.message
+        );
+
+    }
+);
 
 
 function sendMessage() {
 
-    const message = messageInput.value.trim();
+    const message =
+        messageInput.value.trim();
+
 
     if (!message) {
         return;
     }
+
 
     socket.emit(
         "message",
@@ -904,9 +1121,12 @@ function sendMessage() {
         }
     );
 
-    messageInput.value = "";
+
+    messageInput.value =
+        "";
 
     messageInput.focus();
+
 }
 
 
@@ -935,16 +1155,24 @@ messageInput.addEventListener(
 async function getMedia(video) {
 
     const audioConstraints = {
+
         echoCancellation: true,
+
         noiseSuppression: true,
+
         autoGainControl: true
+
     };
+
 
     if (!video) {
 
         return await navigator.mediaDevices.getUserMedia({
+
             audio: audioConstraints,
+
             video: false
+
         });
 
     }
@@ -952,44 +1180,67 @@ async function getMedia(video) {
 
     try {
 
-        return await navigator.mediaDevices.getUserMedia({
+        const stream =
+            await navigator.mediaDevices.getUserMedia({
 
-            audio: audioConstraints,
+                audio: audioConstraints,
 
-            video: {
-                width: {
-                    ideal: 1280
-                },
+                video: {
 
-                height: {
-                    ideal: 720
-                },
+                    width: {
+                        ideal: 1280
+                    },
 
-                frameRate: {
-                    ideal: 30
+                    height: {
+                        ideal: 720
+                    },
+
+                    frameRate: {
+                        ideal: 30
+                    }
+
                 }
-            }
 
-        });
+            });
+
+
+        console.log(
+            "KAMERA + MIKROFON ALINDI"
+        );
+
+
+        console.log(
+            "VIDEO TRACK:",
+            stream.getVideoTracks()
+        );
+
+
+        return stream;
 
     } catch (error) {
 
         console.warn(
-            "Kamera alınamadı. Sesli olarak devam ediliyor:",
+            "Kamera alınamadı:",
             error
         );
 
+
         showToast(
-            "Kamera kullanılamıyor. Sesli olarak bağlanılıyor."
+            "Kamera açılamadı, ses ile devam ediliyor."
         );
 
-        return await navigator.mediaDevices.getUserMedia({
 
-            audio: audioConstraints,
+        const audioOnly =
+            await navigator.mediaDevices.getUserMedia({
 
-            video: false
+                audio: audioConstraints,
 
-        });
+                video: false
+
+            });
+
+
+        return audioOnly;
 
     }
 
@@ -998,196 +1249,248 @@ async function getMedia(video) {
 
 function createPeerConnection() {
 
-    peerConnection = new RTCPeerConnection(
-        rtcConfig
-    );
-
-    remoteStream = new MediaStream();
-
-    pendingCandidates = [];
-
-
-    peerConnection.onicecandidate = event => {
-
-        if (!event.candidate) {
-            return;
-        }
-
-        if (!currentCallTarget) {
-            return;
-        }
-
-        socket.emit(
-            "ice_candidate",
-            {
-                target: currentCallTarget,
-                candidate: event.candidate
-            }
+    peerConnection =
+        new RTCPeerConnection(
+            rtcConfig
         );
 
-    };
+
+    remoteStream =
+        new MediaStream();
 
 
-    peerConnection.onconnectionstatechange = () => {
+    pendingCandidates =
+        [];
 
-        console.log(
-            "CONNECTION:",
-            peerConnection.connectionState
-        );
 
-        if (
-            peerConnection.connectionState === "failed" ||
-            peerConnection.connectionState === "closed"
-        ) {
+    peerConnection.onicecandidate =
+        event => {
 
-            if (currentCallTarget) {
-
-                showToast(
-                    "Bağlantı kesildi."
-                );
-
+            if (!event.candidate) {
+                return;
             }
 
-        }
 
-    };
-
-
-    peerConnection.oniceconnectionstatechange = () => {
-
-        console.log(
-            "ICE:",
-            peerConnection.iceConnectionState
-        );
-
-    };
+            if (!currentCallTarget) {
+                return;
+            }
 
 
-    peerConnection.onsignalingstatechange = () => {
+            socket.emit(
+                "ice_candidate",
+                {
 
-        console.log(
-            "SIGNALING:",
-            peerConnection.signalingState
-        );
+                    target:
+                        currentCallTarget,
 
-    };
+                    candidate:
+                        event.candidate
 
-
-    peerConnection.ontrack = event => {
-
-        console.log(
-            "REMOTE TRACK:",
-            event.track.kind
-        );
-
-
-        if (
-            !remoteStream
-                .getTracks()
-                .some(track => track.id === event.track.id)
-        ) {
-
-            remoteStream.addTrack(
-                event.track
+                }
             );
 
-        }
+        };
 
 
-        console.log(
-            "REMOTE STREAM:",
-            remoteStream
-                .getTracks()
-                .map(track => track.kind)
-        );
-
-
-        if (event.track.kind === "video") {
+    peerConnection.onconnectionstatechange =
+        () => {
 
             console.log(
-                "UZAK VIDEO GELDI"
+                "CONNECTION:",
+                peerConnection.connectionState
             );
 
 
-            remoteVideo.srcObject =
-                remoteStream;
+            if (
+                peerConnection.connectionState ===
+                "failed"
+            ) {
 
-
-            remoteVideo.style.display =
-                "block";
-
-
-            remotePlaceholder.style.display =
-                "none";
-
-
-            remoteVideo.play()
-                .then(() => {
-
-                    console.log(
-                        "REMOTE VIDEO OYNATILIYOR"
-                    );
-
-                })
-                .catch(error => {
-
-                    console.error(
-                        "REMOTE VIDEO PLAY HATASI:",
-                        error
-                    );
-
-                });
-
-
-            event.track.onunmute = () => {
-
-                console.log(
-                    "REMOTE VIDEO UNMUTE"
+                showToast(
+                    "WebRTC bağlantısı başarısız."
                 );
 
-                remoteVideo.play()
-                    .catch(() => {});
+            }
 
-            };
+        };
 
 
-            event.track.onmute = () => {
+    peerConnection.oniceconnectionstatechange =
+        () => {
 
-                console.log(
-                    "REMOTE VIDEO MUTE"
+            console.log(
+                "ICE:",
+                peerConnection.iceConnectionState
+            );
+
+        };
+
+
+    peerConnection.ontrack =
+        event => {
+
+            console.log(
+                "REMOTE TRACK:",
+                event.track.kind
+            );
+
+
+            if (
+                !remoteStream
+                    .getTracks()
+                    .some(track =>
+                        track.id ===
+                        event.track.id
+                    )
+            ) {
+
+                remoteStream.addTrack(
+                    event.track
                 );
 
-            };
-
-        }
+            }
 
 
-        if (event.track.kind === "audio") {
+            console.log(
+                "REMOTE STREAM TRACKS:",
+                remoteStream
+                    .getTracks()
+                    .map(track =>
+                        track.kind
+                    )
+            );
 
-            remoteAudio.srcObject =
-                remoteStream;
+
+            if (
+                event.track.kind ===
+                "video"
+            ) {
+
+                console.log(
+                    "UZAK VIDEO GELDI"
+                );
 
 
-            remoteAudio.play()
-                .then(() => {
+                remoteVideo.srcObject =
+                    remoteStream;
 
-                    console.log(
-                        "REMOTE AUDIO OYNATILIYOR"
-                    );
 
-                })
-                .catch(error => {
+                remoteVideo.style.display =
+                    "block";
 
-                    console.error(
-                        "REMOTE AUDIO PLAY HATASI:",
-                        error
-                    );
 
-                });
+                remotePlaceholder.style.display =
+                    "none";
 
-        }
 
-    };
+                remoteVideo.muted =
+                    false;
+
+
+                remoteVideo.setAttribute(
+                    "autoplay",
+                    ""
+                );
+
+
+                remoteVideo.setAttribute(
+                    "playsinline",
+                    ""
+                );
+
+
+                remoteVideo.setAttribute(
+                    "webkit-playsinline",
+                    ""
+                );
+
+
+                const playRemoteVideo =
+                    async () => {
+
+                        try {
+
+                            await remoteVideo.play();
+
+
+                            console.log(
+                                "REMOTE VIDEO OYNUYOR"
+                            );
+
+                        } catch (error) {
+
+                            console.error(
+                                "REMOTE VIDEO PLAY HATASI:",
+                                error
+                            );
+
+                            showToast(
+                                "Video oynatılamadı."
+                            );
+
+                        }
+
+                    };
+
+
+                playRemoteVideo();
+
+
+                event.track.onunmute =
+                    () => {
+
+                        console.log(
+                            "REMOTE VIDEO UNMUTE"
+                        );
+
+
+                        remoteVideo.play()
+                            .catch(() => {});
+
+                    };
+
+
+                event.track.onmute =
+                    () => {
+
+                        console.log(
+                            "REMOTE VIDEO MUTE"
+                        );
+
+                    };
+
+            }
+
+
+            if (
+                event.track.kind ===
+                "audio"
+            ) {
+
+                remoteAudio.srcObject =
+                    remoteStream;
+
+
+                remoteAudio.play()
+                    .then(() => {
+
+                        console.log(
+                            "REMOTE AUDIO OYNUYOR"
+                        );
+
+                    })
+                    .catch(error => {
+
+                        console.error(
+                            "REMOTE AUDIO PLAY HATASI:",
+                            error
+                        );
+
+                    });
+
+            }
+
+        };
 
 
     const localAudioTrack =
@@ -1200,10 +1503,12 @@ function createPeerConnection() {
         peerConnection.addTransceiver(
             "audio",
             {
+
                 direction:
                     localAudioTrack
                         ? "sendrecv"
                         : "recvonly"
+
             }
         );
 
@@ -1214,13 +1519,17 @@ function createPeerConnection() {
             localAudioTrack
         );
 
+
         microphoneTrack =
             localAudioTrack;
 
     }
 
 
-    if (currentCallType === "video") {
+    if (
+        currentCallType ===
+        "video"
+    ) {
 
         const localVideoTrack =
             localStream
@@ -1232,10 +1541,12 @@ function createPeerConnection() {
             peerConnection.addTransceiver(
                 "video",
                 {
+
                     direction:
                         localVideoTrack
                             ? "sendrecv"
                             : "recvonly"
+
                 }
             );
 
@@ -1250,10 +1561,17 @@ function createPeerConnection() {
                 localVideoTrack
             );
 
+
             cameraTrack =
                 localVideoTrack;
 
         }
+
+
+        console.log(
+            "VIDEO TRANSCEIVER:",
+            videoTransceiver
+        );
 
     }
 
@@ -1265,8 +1583,8 @@ function createPeerConnection() {
 
 
     console.log(
-        "VIDEO TRANSCEIVER:",
-        videoTransceiver
+        "VIDEO SENDER:",
+        videoSender
     );
 
 }
@@ -1278,26 +1596,33 @@ async function flushPendingCandidates() {
         return;
     }
 
+
     if (
         !peerConnection.remoteDescription
     ) {
+
         return;
+
     }
 
+
     for (
-        const candidate of pendingCandidates
+        const candidate
+        of pendingCandidates
     ) {
 
         try {
 
             await peerConnection.addIceCandidate(
-                new RTCIceCandidate(candidate)
+                new RTCIceCandidate(
+                    candidate
+                )
             );
 
         } catch (error) {
 
             console.error(
-                "ICE candidate eklenemedi:",
+                "ICE CANDIDATE HATASI:",
                 error
             );
 
@@ -1305,46 +1630,61 @@ async function flushPendingCandidates() {
 
     }
 
-    pendingCandidates = [];
+
+    pendingCandidates =
+        [];
 
 }
 
 
-function openCallPanel(username, type) {
+function openCallPanel(
+    username,
+    type
+) {
 
     callPanel.classList.add(
         "active"
     );
 
+
     callTitle.textContent =
         username;
+
 
     currentCallType =
         type;
 
 
-    if (type === "video") {
+    if (
+        type ===
+        "video"
+    ) {
 
         callType.textContent =
             "Video araması";
 
-        remoteVideo.style.display =
-            "none";
-
-        localVideo.style.display =
-            cameraTrack
-                ? "block"
-                : "none";
 
         remotePlaceholder.style.display =
             "flex";
 
+
+        remoteVideo.style.display =
+            "none";
+
+
         screenButton.style.display =
             "flex";
+
 
         cameraButton.style.display =
             cameraTrack
                 ? "flex"
+                : "none";
+
+
+        localVideo.style.display =
+            cameraTrack
+                ? "block"
                 : "none";
 
     } else {
@@ -1352,17 +1692,22 @@ function openCallPanel(username, type) {
         callType.textContent =
             "Sesli arama";
 
+
         remoteVideo.style.display =
             "none";
+
 
         localVideo.style.display =
             "none";
 
+
         remotePlaceholder.style.display =
             "flex";
 
+
         screenButton.style.display =
             "none";
+
 
         cameraButton.style.display =
             "none";
@@ -1390,6 +1735,7 @@ function updateButtons() {
                 ? "Mikrofon"
                 : "Mikrofon Kapalı";
 
+
         micButton.classList.toggle(
             "active",
             !micEnabled
@@ -1405,6 +1751,7 @@ function updateButtons() {
                 ? "Kamera"
                 : "Kamera Kapalı";
 
+
         cameraButton.classList.toggle(
             "active",
             !cameraEnabled
@@ -1415,12 +1762,15 @@ function updateButtons() {
 }
 
 
-async function startCall(target, type) {
+async function startCall(
+    target,
+    type
+) {
 
     if (peerConnection) {
 
         showToast(
-            "Zaten bir aramadasın."
+            "Zaten aramadasın."
         );
 
         return;
@@ -1431,6 +1781,7 @@ async function startCall(target, type) {
     currentCallTarget =
         target;
 
+
     currentCallType =
         type;
 
@@ -1439,18 +1790,21 @@ async function startCall(target, type) {
 
         localStream =
             await getMedia(
-                type === "video"
+                type ===
+                "video"
             );
 
 
         microphoneTrack =
-            localStream.getAudioTracks()[0]
-            || null;
+            localStream
+                .getAudioTracks()[0]
+                || null;
 
 
         cameraTrack =
-            localStream.getVideoTracks()[0]
-            || null;
+            localStream
+                .getVideoTracks()[0]
+                || null;
 
 
         micEnabled =
@@ -1469,6 +1823,7 @@ async function startCall(target, type) {
             localVideo.srcObject =
                 localStream;
 
+
             localVideo.style.display =
                 "block";
 
@@ -1476,6 +1831,7 @@ async function startCall(target, type) {
 
             localVideo.srcObject =
                 null;
+
 
             localVideo.style.display =
                 "none";
@@ -1498,31 +1854,46 @@ async function startCall(target, type) {
         );
 
 
+        console.log(
+            "LOCAL OFFER:",
+            offer
+        );
+
+
         socket.emit(
             "call_user",
             {
-                target: target,
-                offer: offer,
-                type: type
+
+                target:
+                    target,
+
+                offer:
+                    offer,
+
+                type:
+                    type
+
             }
         );
 
 
         console.log(
-            "ARAMA BAŞLATILDI"
+            "ARAMA GÖNDERİLDİ"
         );
 
     } catch (error) {
 
         console.error(
-            "ARAMA BAŞLATMA HATASI:",
+            "ARAMA HATASI:",
             error
         );
+
 
         showToast(
             "Arama başlatılamadı: " +
             error.message
         );
+
 
         cleanupCall();
 
@@ -1535,12 +1906,19 @@ socket.on(
     "incoming_call",
     data => {
 
+        console.log(
+            "GELEN ARAMA:",
+            data
+        );
+
+
         if (peerConnection) {
 
             socket.emit(
                 "reject_call",
                 {
-                    target: data.from
+                    target:
+                        data.from
                 }
             );
 
@@ -1559,7 +1937,8 @@ socket.on(
 
 
         incomingText.textContent =
-            data.type === "video"
+            data.type ===
+            "video"
                 ? "Video araması geliyor."
                 : "Sesli arama geliyor.";
 
@@ -1606,18 +1985,21 @@ acceptCallButton.addEventListener(
 
             localStream =
                 await getMedia(
-                    data.type === "video"
+                    data.type ===
+                    "video"
                 );
 
 
             microphoneTrack =
-                localStream.getAudioTracks()[0]
-                || null;
+                localStream
+                    .getAudioTracks()[0]
+                    || null;
 
 
             cameraTrack =
-                localStream.getVideoTracks()[0]
-                || null;
+                localStream
+                    .getVideoTracks()[0]
+                    || null;
 
 
             micEnabled =
@@ -1636,6 +2018,7 @@ acceptCallButton.addEventListener(
                 localVideo.srcObject =
                     localStream;
 
+
                 localVideo.style.display =
                     "block";
 
@@ -1643,6 +2026,7 @@ acceptCallButton.addEventListener(
 
                 localVideo.srcObject =
                     null;
+
 
                 localVideo.style.display =
                     "none";
@@ -1663,6 +2047,11 @@ acceptCallButton.addEventListener(
             );
 
 
+            console.log(
+                "REMOTE DESCRIPTION AYARLANDI"
+            );
+
+
             await flushPendingCandidates();
 
 
@@ -1675,11 +2064,22 @@ acceptCallButton.addEventListener(
             );
 
 
+            console.log(
+                "LOCAL ANSWER:",
+                answer
+            );
+
+
             socket.emit(
                 "answer_call",
                 {
-                    target: data.from,
-                    answer: answer
+
+                    target:
+                        data.from,
+
+                    answer:
+                        answer
+
                 }
             );
 
@@ -1688,7 +2088,6 @@ acceptCallButton.addEventListener(
                 "ARAMA KABUL EDİLDİ"
             );
 
-
         } catch (error) {
 
             console.error(
@@ -1696,10 +2095,12 @@ acceptCallButton.addEventListener(
                 error
             );
 
+
             showToast(
                 "Arama açılamadı: " +
                 error.message
             );
+
 
             cleanupCall();
 
@@ -1721,8 +2122,10 @@ rejectCallButton.addEventListener(
         socket.emit(
             "reject_call",
             {
+
                 target:
                     incomingCallData.from
+
             }
         );
 
@@ -1757,12 +2160,12 @@ socket.on(
             );
 
 
-            await flushPendingCandidates();
-
-
             console.log(
-                "ARAMA CEVABI ALINDI"
+                "ANSWER ALINDI"
             );
+
+
+            await flushPendingCandidates();
 
         } catch (error) {
 
@@ -1828,6 +2231,7 @@ socket.on(
             "Arama reddedildi."
         );
 
+
         cleanupCall();
 
     }
@@ -1843,6 +2247,7 @@ socket.on(
             "Kullanıcı meşgul."
         );
 
+
         cleanupCall();
 
     }
@@ -1856,6 +2261,7 @@ socket.on(
         showToast(
             "Arama sona erdi."
         );
+
 
         cleanupCall();
 
@@ -1914,7 +2320,7 @@ async function startScreenShare() {
     if (!peerConnection) {
 
         showToast(
-            "Aktif bir arama yok."
+            "Aktif arama yok."
         );
 
         return;
@@ -1922,10 +2328,13 @@ async function startScreenShare() {
     }
 
 
-    if (currentCallType !== "video") {
+    if (
+        currentCallType !==
+        "video"
+    ) {
 
         showToast(
-            "Ekran paylaşımı sadece video aramasında kullanılabilir."
+            "Ekran paylaşımı video aramasında kullanılabilir."
         );
 
         return;
@@ -1934,9 +2343,7 @@ async function startScreenShare() {
 
 
     if (isScreenSharing) {
-
         return;
-
     }
 
 
@@ -1950,9 +2357,7 @@ async function startScreenShare() {
         const displayStream =
             await navigator.mediaDevices.getDisplayMedia({
 
-                video: {
-                    cursor: "always"
-                },
+                video: true,
 
                 audio: false
 
@@ -1998,13 +2403,13 @@ async function startScreenShare() {
             "EKRAN PAYLAŞIMI BAŞLADI"
         );
 
-
     } catch (error) {
 
         console.error(
             "EKRAN PAYLAŞIMI HATASI:",
             error
         );
+
 
         showToast(
             "Ekran paylaşımı başlatılamadı."
@@ -2040,7 +2445,7 @@ async function stopScreenShare() {
     } catch (error) {
 
         console.error(
-            "EKRAN TRACK DEĞİŞTİRME HATASI:",
+            "VIDEO TRACK DEĞİŞTİRME HATASI:",
             error
         );
 
@@ -2049,7 +2454,9 @@ async function stopScreenShare() {
 
     if (screenTrack) {
 
-        screenTrack.stop();
+        try {
+            screenTrack.stop();
+        } catch (error) {}
 
         screenTrack =
             null;
@@ -2105,8 +2512,10 @@ endCallButton.addEventListener(
             socket.emit(
                 "end_call",
                 {
+
                     target:
                         currentCallTarget
+
                 }
             );
 
@@ -2160,9 +2569,15 @@ function cleanupCall() {
     if (peerConnection) {
 
         try {
-            peerConnection.ontrack = null;
-            peerConnection.onicecandidate = null;
+
+            peerConnection.ontrack =
+                null;
+
+            peerConnection.onicecandidate =
+                null;
+
             peerConnection.close();
+
         } catch (error) {}
 
     }
@@ -2275,18 +2690,29 @@ function cleanupCall() {
 }
 
 
-window.addEventListener(
-    "beforeunload",
-    () => {
+remoteVideo.addEventListener(
+    "loadedmetadata",
+    async () => {
 
-        if (currentCallTarget) {
+        console.log(
+            "REMOTE VIDEO METADATA HAZIR"
+        );
 
-            socket.emit(
-                "end_call",
-                {
-                    target:
-                        currentCallTarget
-                }
+
+        try {
+
+            await remoteVideo.play();
+
+
+            console.log(
+                "REMOTE VIDEO PLAY BAŞARILI"
+            );
+
+        } catch (error) {
+
+            console.error(
+                "REMOTE VIDEO PLAY HATASI:",
+                error
             );
 
         }
@@ -2296,26 +2722,19 @@ window.addEventListener(
 
 
 remoteVideo.addEventListener(
-    "loadedmetadata",
+    "canplay",
     () => {
 
         console.log(
-            "REMOTE VIDEO METADATA HAZIR"
+            "REMOTE VIDEO CANPLAY"
         );
 
 
         remoteVideo.play()
-            .then(() => {
-
-                console.log(
-                    "REMOTE VIDEO PLAY BAŞARILI"
-                );
-
-            })
             .catch(error => {
 
                 console.error(
-                    "REMOTE VIDEO PLAY:",
+                    "CANPLAY PLAY HATASI:",
                     error
                 );
 
@@ -2332,6 +2751,9 @@ remoteVideo.addEventListener(
         console.log(
             "REMOTE VIDEO GERÇEKTEN OYNUYOR"
         );
+
+        remotePlaceholder.style.display =
+            "none";
 
     }
 );
@@ -2360,7 +2782,6 @@ cameraButton.style.display =
 
 micButton.style.display =
     "none";
-
 
 </script>
 
