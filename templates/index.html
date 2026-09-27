@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="tr">
 <head>
@@ -327,3 +326,446 @@
         }
 
         .control-button:hover {
+            background: #3b3b49;
+        }
+
+        .control-button.off {
+            background: #4a3030;
+        }
+
+        .control-button.off:hover {
+            background: #5c3a3a;
+        }
+
+        .hangup-button {
+            background: #e5484d;
+        }
+
+        .hangup-button:hover {
+            background: #c9393e;
+        }
+
+        .incoming-text {
+            text-align: center;
+            font-size: 16px;
+            margin-bottom: 10px;
+            color: #ddd;
+        }
+
+        @media (max-width: 720px) {
+            .sidebar {
+                width: 220px;
+                padding: 15px;
+            }
+
+            #localVideo {
+                width: 120px;
+                right: 10px;
+                bottom: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app">
+    <aside class="sidebar">
+        <div class="logo">ANONIM</div>
+
+        <div class="username">@{{ username }}</div>
+
+        <div class="users-title">ÇEVRİMİÇİ KULLANICILAR</div>
+        <div id="users">
+            <div class="empty">Kimse yok...</div>
+        </div>
+    </aside>
+
+    <main class="main">
+        <div class="header">Genel Sohbet</div>
+
+        <div id="messages"></div>
+
+        <div class="input-area">
+            <input type="text" id="messageInput" maxlength="500" autocomplete="off" placeholder="Bir mesaj yaz...">
+            <button id="sendButton">Gönder</button>
+        </div>
+    </main>
+</div>
+
+<!-- Gelen arama bildirimi -->
+<div class="overlay" id="incomingOverlay">
+    <div class="call-box">
+        <div class="call-title">Gelen Arama</div>
+        <div class="incoming-text" id="incomingText"></div>
+        <div class="controls">
+            <button class="control-button" id="acceptCallBtn">Kabul Et</button>
+            <button class="hangup-button" id="rejectCallBtn">Reddet</button>
+        </div>
+    </div>
+</div>
+
+<!-- Aktif arama ekranı -->
+<div class="overlay" id="callOverlay">
+    <div class="call-box">
+        <div class="call-title" id="callTitle">Arama</div>
+
+        <div class="videos">
+            <video id="remoteVideo" autoplay playsinline></video>
+            <audio id="remoteAudio" autoplay></audio>
+            <div id="remotePlaceholder">Bağlanıyor...</div>
+            <video id="localVideo" autoplay playsinline muted></video>
+        </div>
+
+        <div class="controls">
+            <button class="control-button" id="micButton">🎤 Mikrofon</button>
+            <button class="control-button" id="camButton">📷 Kamera</button>
+            <button class="hangup-button" id="hangupButton">Aramayı Bitir</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const myUsername = {{ username | tojson }};
+    const socket = io();
+
+    const ICE_SERVERS = {
+        iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
+    };
+
+    let knownUsers = [];
+    let peerConnection = null;
+    let localStream = null;
+    let callPeerSid = null;
+    let pendingIncomingCall = null;
+    let micOn = true;
+    let camOn = true;
+
+    const usersEl = document.getElementById("users");
+    const messagesEl = document.getElementById("messages");
+    const messageInput = document.getElementById("messageInput");
+    const sendButton = document.getElementById("sendButton");
+
+    const incomingOverlay = document.getElementById("incomingOverlay");
+    const incomingText = document.getElementById("incomingText");
+    const acceptCallBtn = document.getElementById("acceptCallBtn");
+    const rejectCallBtn = document.getElementById("rejectCallBtn");
+
+    const callOverlay = document.getElementById("callOverlay");
+    const callTitle = document.getElementById("callTitle");
+    const remoteVideo = document.getElementById("remoteVideo");
+    const remoteAudio = document.getElementById("remoteAudio");
+    const remotePlaceholder = document.getElementById("remotePlaceholder");
+    const localVideo = document.getElementById("localVideo");
+    const micButton = document.getElementById("micButton");
+    const camButton = document.getElementById("camButton");
+    const hangupButton = document.getElementById("hangupButton");
+
+    // ---------- Kullanıcı listesi ----------
+
+    function renderUsers() {
+        const others = knownUsers.filter((u) => u.sid !== socket.id);
+
+        if (others.length === 0) {
+            usersEl.innerHTML = '<div class="empty">Kimse yok...</div>';
+            return;
+        }
+
+        usersEl.innerHTML = "";
+
+        others.forEach((u) => {
+            const busy = !!callPeerSid;
+
+            const row = document.createElement("div");
+            row.className = "user";
+
+            const info = document.createElement("div");
+            info.className = "user-info";
+
+            const name = document.createElement("div");
+            name.className = "user-name";
+            name.textContent = "@" + u.username;
+
+            const status = document.createElement("div");
+            status.className = "user-status";
+            status.textContent = "Çevrimiçi";
+
+            info.appendChild(name);
+            info.appendChild(status);
+
+            const buttons = document.createElement("div");
+            buttons.className = "user-buttons";
+
+            const audioBtn = document.createElement("button");
+            audioBtn.textContent = "📞";
+            audioBtn.title = "Sesli ara";
+            audioBtn.disabled = busy;
+            audioBtn.addEventListener("click", () => startCall(u.sid, false));
+
+            const videoBtn = document.createElement("button");
+            videoBtn.textContent = "🎥";
+            videoBtn.title = "Görüntülü ara";
+            videoBtn.disabled = busy;
+            videoBtn.addEventListener("click", () => startCall(u.sid, true));
+
+            buttons.appendChild(audioBtn);
+            buttons.appendChild(videoBtn);
+
+            row.appendChild(info);
+            row.appendChild(buttons);
+            usersEl.appendChild(row);
+        });
+    }
+
+    socket.on("user_list", (list) => {
+        knownUsers = list;
+        renderUsers();
+    });
+
+    // ---------- Mesajlaşma ----------
+
+    function appendMessage(username, text) {
+        const isSelf = username === myUsername;
+
+        const wrap = document.createElement("div");
+        wrap.className = "message";
+
+        const who = document.createElement("div");
+        who.className = "message-user";
+        who.textContent = isSelf ? "Sen" : "@" + username;
+
+        const body = document.createElement("div");
+        body.className = "message-text";
+        body.textContent = text;
+
+        wrap.appendChild(who);
+        wrap.appendChild(body);
+        messagesEl.appendChild(wrap);
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    socket.on("message", (data) => {
+        appendMessage(data.username, data.message);
+    });
+
+    function sendMessage() {
+        const text = messageInput.value.trim();
+        if (!text) return;
+
+        socket.emit("message", { message: text });
+        messageInput.value = "";
+    }
+
+    sendButton.addEventListener("click", sendMessage);
+    messageInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") sendMessage();
+    });
+
+    // ---------- WebRTC arama ----------
+
+    function setupPeerConnection() {
+        peerConnection = new RTCPeerConnection(ICE_SERVERS);
+
+        peerConnection.onicecandidate = (event) => {
+            if (event.candidate && callPeerSid) {
+                socket.emit("ice_candidate", {
+                    target: callPeerSid,
+                    candidate: event.candidate
+                });
+            }
+        };
+
+        peerConnection.ontrack = (event) => {
+            if (event.track.kind === "video") {
+                remoteVideo.srcObject = event.streams[0];
+                remoteVideo.style.display = "block";
+                remotePlaceholder.style.display = "none";
+            } else {
+                remoteAudio.srcObject = event.streams[0];
+            }
+        };
+    }
+
+    function openCallOverlay(withVideo) {
+        callTitle.textContent = withVideo ? "Görüntülü Arama" : "Sesli Arama";
+        remoteVideo.style.display = "none";
+        remotePlaceholder.style.display = "flex";
+        localVideo.style.display = withVideo ? "block" : "none";
+        callOverlay.classList.add("show");
+    }
+
+    async function startCall(targetSid, withVideo) {
+        if (callPeerSid) return;
+
+        try {
+            localStream = await navigator.mediaDevices.getUserMedia({
+                audio: true,
+                video: withVideo
+            });
+        } catch (err) {
+            alert("Kameraya/mikrofona erişilemedi: " + err.message);
+            return;
+        }
+
+        callPeerSid = targetSid;
+        setupPeerConnection();
+
+        localStream.getTracks().forEach((track) => {
+            peerConnection.addTrack(track, localStream);
+        });
+        localVideo.srcObject = localStream;
+
+        const offer = await peerConnection.createOffer();
+        await peerConnection.setLocalDescription(offer);
+
+        socket.emit("call_user", { target: targetSid, offer });
+
+        openCallOverlay(withVideo);
+        renderUsers();
+    }
+
+    socket.on("incoming_call", (data) => {
+        if (callPeerSid) {
+            socket.emit("reject_call", { target: data.from });
+            return;
+        }
+
+        pendingIncomingCall = data;
+        incomingText.textContent = "@" + data.username + " seni arıyor...";
+        incomingOverlay.classList.add("show");
+    });
+
+    acceptCallBtn.addEventListener("click", async () => {
+        if (!pendingIncomingCall) return;
+
+        const call = pendingIncomingCall;
+        pendingIncomingCall = null;
+        incomingOverlay.classList.remove("show");
+
+        const withVideo = !!(call.offer && call.offer.sdp && call.offer.sdp.includes("m=video"));
+
+        try {
+            localStream = await navigator.mediaDevices.getUserMedia({
+                audio: true,
+                video: withVideo
+            });
+        } catch (err) {
+            alert("Kameraya/mikrofona erişilemedi: " + err.message);
+            socket.emit("reject_call", { target: call.from });
+            return;
+        }
+
+        callPeerSid = call.from;
+        setupPeerConnection();
+
+        localStream.getTracks().forEach((track) => {
+            peerConnection.addTrack(track, localStream);
+        });
+        localVideo.srcObject = localStream;
+
+        await peerConnection.setRemoteDescription(new RTCSessionDescription(call.offer));
+        const answer = await peerConnection.createAnswer();
+        await peerConnection.setLocalDescription(answer);
+
+        socket.emit("answer_call", { target: call.from, answer });
+
+        openCallOverlay(withVideo);
+        renderUsers();
+    });
+
+    rejectCallBtn.addEventListener("click", () => {
+        if (!pendingIncomingCall) return;
+
+        socket.emit("reject_call", { target: pendingIncomingCall.from });
+        pendingIncomingCall = null;
+        incomingOverlay.classList.remove("show");
+    });
+
+    socket.on("call_answered", async (data) => {
+        if (!peerConnection || callPeerSid !== data.from) return;
+        await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
+    });
+
+    socket.on("ice_candidate", async (data) => {
+        if (!peerConnection) return;
+
+        try {
+            await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
+        } catch (err) {
+            console.error("ICE candidate eklenemedi:", err);
+        }
+    });
+
+    socket.on("call_busy", (data) => {
+        alert(data.message || "Kullanıcı meşgul.");
+        endCallLocally();
+    });
+
+    socket.on("call_rejected", () => {
+        alert("Arama reddedildi.");
+        endCallLocally();
+    });
+
+    socket.on("call_ended", () => {
+        endCallLocally();
+    });
+
+    hangupButton.addEventListener("click", () => {
+        if (callPeerSid) {
+            socket.emit("end_call", { target: callPeerSid });
+        }
+        endCallLocally();
+    });
+
+    function endCallLocally() {
+        if (peerConnection) {
+            peerConnection.close();
+            peerConnection = null;
+        }
+
+        if (localStream) {
+            localStream.getTracks().forEach((t) => t.stop());
+            localStream = null;
+        }
+
+        callPeerSid = null;
+        micOn = true;
+        camOn = true;
+
+        micButton.textContent = "🎤 Mikrofon";
+        micButton.classList.remove("off");
+        camButton.textContent = "📷 Kamera";
+        camButton.classList.remove("off");
+
+        remoteVideo.srcObject = null;
+        remoteAudio.srcObject = null;
+        localVideo.srcObject = null;
+
+        callOverlay.classList.remove("show");
+        renderUsers();
+    }
+
+    micButton.addEventListener("click", () => {
+        if (!localStream) return;
+
+        micOn = !micOn;
+        localStream.getAudioTracks().forEach((t) => (t.enabled = micOn));
+        micButton.textContent = micOn ? "🎤 Mikrofon" : "🔇 Mikrofon Kapalı";
+        micButton.classList.toggle("off", !micOn);
+    });
+
+    camButton.addEventListener("click", () => {
+        if (!localStream) return;
+
+        camOn = !camOn;
+        localStream.getVideoTracks().forEach((t) => (t.enabled = camOn));
+        camButton.textContent = camOn ? "📷 Kamera" : "📷 Kamera Kapalı";
+        camButton.classList.toggle("off", !camOn);
+    });
+
+    socket.on("disconnect", () => {
+        appendMessage("Sistem", "Bağlantı koptu, sayfayı yenilemen gerekebilir.");
+    });
+</script>
+
+</body>
+</html>
