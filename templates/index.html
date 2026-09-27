@@ -199,7 +199,7 @@
             position: relative;
             width: 100%;
             aspect-ratio: 16 / 9;
-            background: black;
+            background: #050505;
             border-radius: 14px;
             overflow: hidden;
         }
@@ -208,7 +208,7 @@
             width: 100%;
             height: 100%;
             object-fit: contain;
-            background: black;
+            background: #050505;
         }
 
         #localVideo {
@@ -221,6 +221,7 @@
             border-radius: 10px;
             border: 2px solid white;
             background: #050505;
+            z-index: 5;
         }
 
         #remoteAudio {
@@ -235,6 +236,7 @@
             justify-content: center;
             color: #aaa;
             font-size: 20px;
+            z-index: 1;
         }
 
         .controls {
@@ -385,10 +387,7 @@
 </div>
 
 
-<div
-    id="incomingOverlay"
-    class="overlay"
->
+<div id="incomingOverlay" class="overlay">
 
     <div class="incoming-box">
 
@@ -429,10 +428,7 @@
 </div>
 
 
-<div
-    id="callOverlay"
-    class="overlay"
->
+<div id="callOverlay" class="overlay">
 
     <div class="call-box">
 
@@ -445,9 +441,7 @@
 
         <div class="videos">
 
-            <div
-                id="remotePlaceholder"
-            >
+            <div id="remotePlaceholder">
                 Bağlantı bekleniyor...
             </div>
 
@@ -597,6 +591,8 @@ let cameraEnabled = true;
 let sharingScreen = false;
 
 let pendingCandidates = [];
+
+let remoteStream = null;
 
 
 const rtcConfig = {
@@ -760,11 +756,9 @@ socket.on(
 );
 
 
-function getMedia(
-    video
-) {
+async function getMedia(video) {
 
-    return navigator.mediaDevices.getUserMedia({
+    const constraints = {
 
         audio: {
 
@@ -778,24 +772,37 @@ function getMedia(
 
         video: video
             ? {
-
                 width: {
                     ideal: 1280
                 },
 
                 height: {
                     ideal: 720
-                }
+                },
 
+                facingMode: "user"
             }
             : false
 
-    });
+    };
+
+    console.log(
+        "MEDIA İSTENİYOR:",
+        constraints
+    );
+
+    return navigator.mediaDevices.getUserMedia(
+        constraints
+    );
 
 }
 
 
 function createPeerConnection() {
+
+    console.log(
+        "PEER CONNECTION OLUŞTURULUYOR"
+    );
 
     peerConnection =
         new RTCPeerConnection(
@@ -804,11 +811,26 @@ function createPeerConnection() {
 
     pendingCandidates = [];
 
+    remoteStream =
+        new MediaStream();
+
+    remoteVideo.srcObject =
+        remoteStream;
+
+    remoteAudio.srcObject =
+        remoteStream;
+
+
     if (localStream) {
 
         localStream
             .getTracks()
             .forEach(track => {
+
+                console.log(
+                    "LOCAL TRACK EKLENİYOR:",
+                    track.kind
+                );
 
                 const sender =
                     peerConnection.addTrack(
@@ -834,23 +856,57 @@ function createPeerConnection() {
         event => {
 
             console.log(
-                "REMOTE TRACK:",
-                event.track.kind
+                "REMOTE TRACK GELDİ:",
+                event.track.kind,
+                event.track.readyState
             );
+
+            if (
+                !remoteStream.getTracks()
+                    .some(
+                        track =>
+                            track.id ===
+                            event.track.id
+                    )
+            ) {
+
+                remoteStream.addTrack(
+                    event.track
+                );
+
+            }
 
             if (
                 event.track.kind ===
                 "video"
             ) {
 
-                remoteVideo.srcObject =
-                    event.streams[0];
-
                 remoteVideo.style.display =
                     "block";
 
                 remotePlaceholder.style.display =
                     "none";
+
+                remoteVideo.play()
+                    .then(
+                        () => {
+
+                            console.log(
+                                "REMOTE VIDEO OYNATILIYOR"
+                            );
+
+                        }
+                    )
+                    .catch(
+                        error => {
+
+                            console.error(
+                                "REMOTE VIDEO PLAY HATASI:",
+                                error
+                            );
+
+                        }
+                    );
 
             }
 
@@ -859,15 +915,25 @@ function createPeerConnection() {
                 "audio"
             ) {
 
-                remoteAudio.srcObject =
-                    event.streams[0];
-
                 remoteAudio.play()
+                    .then(
+                        () => {
+
+                            console.log(
+                                "REMOTE AUDIO OYNATILIYOR"
+                            );
+
+                        }
+                    )
                     .catch(
-                        error => console.error(
-                            "REMOTE AUDIO PLAY:",
-                            error
-                        )
+                        error => {
+
+                            console.error(
+                                "REMOTE AUDIO PLAY HATASI:",
+                                error
+                            );
+
+                        }
                     );
 
             }
@@ -882,6 +948,10 @@ function createPeerConnection() {
                 event.candidate &&
                 currentTarget
             ) {
+
+                console.log(
+                    "ICE GÖNDERİLİYOR"
+                );
 
                 socket.emit(
                     "ice_candidate",
@@ -899,26 +969,93 @@ function createPeerConnection() {
         };
 
 
+    peerConnection.oniceconnectionstatechange =
+        () => {
+
+            console.log(
+                "ICE STATE:",
+                peerConnection.iceConnectionState
+            );
+
+        };
+
+
     peerConnection.onconnectionstatechange =
         () => {
 
             console.log(
-                "CONNECTION:",
+                "CONNECTION STATE:",
                 peerConnection.connectionState
             );
 
             if (
                 peerConnection.connectionState ===
-                "failed"
+                "connected"
             ) {
 
                 console.log(
-                    "WebRTC bağlantısı başarısız."
+                    "WEBRTC BAĞLANTISI KURULDU"
                 );
 
             }
 
         };
+
+
+    peerConnection.onsignalingstatechange =
+        () => {
+
+            console.log(
+                "SIGNALING STATE:",
+                peerConnection.signalingState
+            );
+
+        };
+
+}
+
+
+async function addPendingCandidates() {
+
+    if (
+        !peerConnection ||
+        !peerConnection.remoteDescription
+    ) {
+
+        return;
+
+    }
+
+    const candidates =
+        pendingCandidates;
+
+    pendingCandidates = [];
+
+    for (
+        const candidate
+        of candidates
+    ) {
+
+        try {
+
+            await peerConnection.addIceCandidate(
+                candidate
+            );
+
+            console.log(
+                "BEKLEYEN ICE EKLENDİ"
+            );
+
+        } catch (error) {
+
+            console.error(
+                "BEKLEYEN ICE HATASI:",
+                error
+            );
+
+        }
+
+    }
 
 }
 
@@ -955,6 +1092,11 @@ async function startCall(
             localStream.getVideoTracks()[0]
             || null;
 
+        console.log(
+            "KAMERA TRACK:",
+            cameraTrack
+        );
+
         createPeerConnection();
 
         callTitle.textContent =
@@ -970,9 +1112,7 @@ async function startCall(
             "flex";
 
         remoteVideo.style.display =
-            type === "video"
-                ? "block"
-                : "none";
+            "none";
 
         cameraButton.style.display =
             type === "video"
@@ -990,18 +1130,29 @@ async function startCall(
         const offer =
             await peerConnection.createOffer();
 
+        console.log(
+            "OFFER OLUŞTURULDU"
+        );
+
         await peerConnection.setLocalDescription(
             offer
+        );
+
+        console.log(
+            "LOCAL DESCRIPTION AYARLANDI"
         );
 
         socket.emit(
             "call_user",
             {
-                target: target,
+                target:
+                    target,
 
-                offer: offer,
+                offer:
+                    peerConnection.localDescription,
 
-                type: type
+                type:
+                    type
             }
         );
 
@@ -1015,7 +1166,7 @@ async function startCall(
         cleanupCall();
 
         alert(
-            "Mikrofon/kamera erişimi alınamadı: " +
+            "Arama başlatılamadı: " +
             error.message
         );
 
@@ -1028,12 +1179,18 @@ socket.on(
     "incoming_call",
     data => {
 
+        console.log(
+            "GELEN ARAMA:",
+            data.type
+        );
+
         if (peerConnection) {
 
             socket.emit(
                 "reject_call",
                 {
-                    target: data.from
+                    target:
+                        data.from
                 }
             );
 
@@ -1094,6 +1251,11 @@ acceptButton.onclick =
                 localStream.getVideoTracks()[0]
                 || null;
 
+            console.log(
+                "KABUL EDEN KAMERA:",
+                cameraTrack
+            );
+
             createPeerConnection();
 
             callTitle.textContent =
@@ -1105,10 +1267,11 @@ acceptButton.onclick =
                 "show"
             );
 
+            remotePlaceholder.style.display =
+                "flex";
+
             remoteVideo.style.display =
-                data.type === "video"
-                    ? "block"
-                    : "none";
+                "none";
 
             cameraButton.style.display =
                 data.type === "video"
@@ -1123,30 +1286,35 @@ acceptButton.onclick =
             localVideo.srcObject =
                 localStream;
 
+            console.log(
+                "REMOTE OFFER AYARLANIYOR"
+            );
+
             await peerConnection.setRemoteDescription(
                 new RTCSessionDescription(
                     data.offer
                 )
             );
 
-            for (
-                const candidate
-                of pendingCandidates
-            ) {
+            console.log(
+                "REMOTE OFFER AYARLANDI"
+            );
 
-                await peerConnection.addIceCandidate(
-                    candidate
-                );
-
-            }
-
-            pendingCandidates = [];
+            await addPendingCandidates();
 
             const answer =
                 await peerConnection.createAnswer();
 
+            console.log(
+                "ANSWER OLUŞTURULDU"
+            );
+
             await peerConnection.setLocalDescription(
                 answer
+            );
+
+            console.log(
+                "LOCAL ANSWER AYARLANDI"
             );
 
             socket.emit(
@@ -1156,7 +1324,7 @@ acceptButton.onclick =
                         currentTarget,
 
                     answer:
-                        answer
+                        peerConnection.localDescription
                 }
             );
 
@@ -1208,9 +1376,11 @@ socket.on(
     "call_answered",
     async data => {
 
-        if (
-            !peerConnection
-        ) {
+        console.log(
+            "CALL ANSWER GELDİ"
+        );
+
+        if (!peerConnection) {
             return;
         }
 
@@ -1222,18 +1392,11 @@ socket.on(
                 )
             );
 
-            for (
-                const candidate
-                of pendingCandidates
-            ) {
+            console.log(
+                "REMOTE ANSWER AYARLANDI"
+            );
 
-                await peerConnection.addIceCandidate(
-                    candidate
-                );
-
-            }
-
-            pendingCandidates = [];
+            await addPendingCandidates();
 
         } catch (error) {
 
@@ -1252,10 +1415,18 @@ socket.on(
     "ice_candidate",
     async data => {
 
-        if (
-            !peerConnection
-        ) {
+        console.log(
+            "ICE GELDİ"
+        );
+
+        if (!peerConnection) {
+
+            console.log(
+                "PEER YOK, ICE ATLANDI"
+            );
+
             return;
+
         }
 
         const candidate =
@@ -1273,16 +1444,24 @@ socket.on(
                     candidate
                 );
 
+                console.log(
+                    "ICE EKLENDİ"
+                );
+
             } catch (error) {
 
                 console.error(
-                    "ICE ERROR:",
+                    "ICE EKLEME HATASI:",
                     error
                 );
 
             }
 
         } else {
+
+            console.log(
+                "ICE BEKLETİLİYOR"
+            );
 
             pendingCandidates.push(
                 candidate
@@ -1343,6 +1522,10 @@ micButton.onclick =
         const tracks =
             localStream.getAudioTracks();
 
+        if (!tracks.length) {
+            return;
+        }
+
         tracks.forEach(
             track => {
 
@@ -1372,7 +1555,13 @@ cameraButton.onclick =
     () => {
 
         if (!cameraTrack) {
+
+            alert(
+                "Bu cihazda kullanılabilir kamera bulunamadı."
+            );
+
             return;
+
         }
 
         cameraEnabled =
@@ -1467,7 +1656,7 @@ async function startScreenShare() {
         if (!videoSender) {
 
             throw new Error(
-                "WebRTC video sender bulunamadı."
+                "Video sender bulunamadı."
             );
 
         }
@@ -1485,18 +1674,14 @@ async function startScreenShare() {
         screenButton.textContent =
             "🛑 Ekranı Durdur";
 
-        screenButton.classList.add(
-            "disabled"
-        );
-
         console.log(
             "EKRAN PAYLAŞIMI BAŞLADI"
         );
 
         screenTrack.onended =
-            () => {
+            async () => {
 
-                stopScreenShare();
+                await stopScreenShare();
 
             };
 
@@ -1507,16 +1692,16 @@ async function startScreenShare() {
             error
         );
 
+        screenStream =
+            null;
+
+        screenTrack =
+            null;
+
         if (
-            error.name ===
+            error.name !==
             "NotAllowedError"
         ) {
-
-            console.log(
-                "Kullanıcı ekran paylaşımını iptal etti."
-            );
-
-        } else {
 
             alert(
                 "Ekran paylaşımı başlatılamadı: " +
@@ -1531,10 +1716,6 @@ async function startScreenShare() {
 
 
 async function stopScreenShare() {
-
-    console.log(
-        "EKRAN PAYLAŞIMI DURDURULUYOR"
-    );
 
     if (!screenStream) {
         return;
@@ -1556,7 +1737,7 @@ async function stopScreenShare() {
     } catch (error) {
 
         console.error(
-            "TRACK DEĞİŞTİRME HATASI:",
+            "KAMERA TRACK GERİ YÜKLEME HATASI:",
             error
         );
 
@@ -1587,23 +1768,11 @@ async function stopScreenShare() {
     screenButton.textContent =
         "🖥️ Ekran";
 
-    screenButton.classList.remove(
-        "disabled"
-    );
-
-    console.log(
-        "EKRAN PAYLAŞIMI DURDU"
-    );
-
 }
 
 
 screenButton.onclick =
     async () => {
-
-        console.log(
-            "EKRAN BUTONUNA BASILDI"
-        );
 
         if (sharingScreen) {
 
@@ -1636,7 +1805,8 @@ function endCall() {
         socket.emit(
             "end_call",
             {
-                target: target
+                target:
+                    target
             }
         );
 
@@ -1669,19 +1839,37 @@ function cleanupCall() {
 
     }
 
-    screenStream =
-        null;
+    if (peerConnection) {
 
-    screenTrack =
+        peerConnection.close();
+
+    }
+
+    peerConnection =
         null;
 
     localStream =
         null;
 
+    screenStream =
+        null;
+
     cameraTrack =
         null;
 
+    screenTrack =
+        null;
+
     videoSender =
+        null;
+
+    remoteStream =
+        null;
+
+    currentTarget =
+        null;
+
+    currentCallType =
         null;
 
     sharingScreen =
@@ -1690,28 +1878,13 @@ function cleanupCall() {
     pendingCandidates =
         [];
 
-    if (peerConnection) {
-
-        peerConnection.close();
-
-        peerConnection =
-            null;
-
-    }
-
-    currentTarget =
-        null;
-
-    currentCallType =
-        null;
-
     remoteVideo.srcObject =
         null;
 
-    localVideo.srcObject =
+    remoteAudio.srcObject =
         null;
 
-    remoteAudio.srcObject =
+    localVideo.srcObject =
         null;
 
     remoteVideo.style.display =
@@ -1732,10 +1905,6 @@ function cleanupCall() {
 
     screenButton.textContent =
         "🖥️ Ekran";
-
-    screenButton.classList.remove(
-        "disabled"
-    );
 
     micEnabled =
         true;
@@ -1797,7 +1966,8 @@ function sendMessage() {
     socket.emit(
         "message",
         {
-            message: message
+            message:
+                message
         }
     );
 
@@ -1817,10 +1987,10 @@ window.addEventListener(
 );
 
 
-screenButton.style.display =
+cameraButton.style.display =
     "none";
 
-cameraButton.style.display =
+screenButton.style.display =
     "none";
 
 remoteVideo.style.display =
