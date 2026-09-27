@@ -5,757 +5,399 @@
 
     <meta
         name="viewport"
-        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
-    >
-
-    <meta
-        name="mobile-web-app-capable"
-        content="yes"
-    >
-
-    <meta
-        name="apple-mobile-web-app-capable"
-        content="yes"
+        content="width=device-width, initial-scale=1.0"
     >
 
     <title>ANONIM — Chat</title>
 
-    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
-
-    <style>
-        * {
-            box-sizing: border-box;
-        }
-
-        html,
-        body {
-            width: 100%;
-            height: 100%;
-            margin: 0;
-            padding: 0;
-            background: #080808;
-            color: white;
-            font-family: Arial, Helvetica, sans-serif;
-            overflow: hidden;
-        }
-
-        body {
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        button,
-        input {
-            font-family: inherit;
-        }
-
-        button {
-            touch-action: manipulation;
-        }
-
-        .app {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .topbar {
-            height: 64px;
-            min-height: 64px;
-            padding: 0 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: #101010;
-            border-bottom: 1px solid #292929;
-        }
-
-        .logo {
-            font-size: 21px;
-            font-weight: 800;
-            letter-spacing: 2px;
-        }
-
-        .username {
-            color: #aaa;
-            font-size: 14px;
-        }
-
-        .main {
-            flex: 1;
-            min-height: 0;
-            display: flex;
-        }
-
-        .sidebar {
-            width: 260px;
-            min-width: 260px;
-            background: #0d0d0d;
-            border-right: 1px solid #292929;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .sidebar-title {
-            padding: 18px;
-            font-size: 13px;
-            color: #888;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        #userList {
-            flex: 1;
-            overflow-y: auto;
-        }
-
-        .user {
-            margin: 5px 10px;
-            padding: 12px;
-            border-radius: 10px;
-            background: #151515;
-            cursor: pointer;
-            transition: 0.15s;
-        }
-
-        .user:hover {
-            background: #222;
-        }
-
-        .user-name {
-            font-weight: 600;
-        }
-
-        .user-status {
-            margin-top: 4px;
-            color: #777;
-            font-size: 11px;
-        }
-
-        .empty {
-            padding: 30px 15px;
-            color: #666;
-            text-align: center;
-            font-size: 13px;
-        }
-
-        .chat-area {
-            flex: 1;
-            min-width: 0;
-            min-height: 0;
-            display: flex;
-            flex-direction: column;
-        }
-
-        #messages {
-            flex: 1;
-            min-height: 0;
-            overflow-y: auto;
-            padding: 20px;
-        }
-
-        .message {
-            max-width: 800px;
-            margin-bottom: 14px;
-        }
-
-        .message-user {
-            margin-bottom: 4px;
-            color: #777;
-            font-size: 12px;
-        }
-
-        .message-text {
-            display: inline-block;
-            padding: 10px 13px;
-            background: #151515;
-            border: 1px solid #252525;
-            border-radius: 12px;
-            word-break: break-word;
-        }
-
-        .input-area {
-            display: flex;
-            gap: 10px;
-            padding: 14px;
-            background: #0d0d0d;
-            border-top: 1px solid #292929;
-        }
-
-        #messageInput {
-            flex: 1;
-            min-width: 0;
-            padding: 13px;
-            background: #171717;
-            border: 1px solid #292929;
-            border-radius: 10px;
-            color: white;
-            outline: none;
-        }
-
-        #messageInput:focus {
-            border-color: #555;
-        }
-
-        #sendButton {
-            padding: 0 20px;
-            background: white;
-            color: black;
-            border: 0;
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: 700;
-        }
-
-        .incoming-call {
-            position: fixed;
-            left: 50%;
-            top: 25px;
-            transform: translateX(-50%);
-            width: min(400px, calc(100% - 30px));
-            z-index: 2000;
-            display: none;
-            padding: 20px;
-            background: #151515;
-            border: 1px solid #333;
-            border-radius: 15px;
-            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.5);
-        }
-
-        .incoming-call.active {
-            display: block;
-        }
-
-        .incoming-title {
-            margin-bottom: 5px;
-            font-size: 17px;
-            font-weight: 700;
-        }
-
-        .incoming-text {
-            margin-bottom: 18px;
-            color: #999;
-            font-size: 13px;
-        }
-
-        .incoming-buttons {
-            display: flex;
-            gap: 10px;
-        }
-
-        .incoming-buttons button {
-            flex: 1;
-            height: 42px;
-            border: 0;
-            border-radius: 9px;
-            cursor: pointer;
-            font-weight: 700;
-        }
-
-        #acceptCallButton {
-            background: white;
-            color: black;
-        }
-
-        #rejectCallButton {
-            background: #272727;
-            color: white;
-        }
-
-        .call-panel {
-            position: fixed;
-            inset: 0;
-            z-index: 1000;
-            display: none;
-            flex-direction: column;
-            background: #000;
-        }
-
-        .call-panel.active {
-            display: flex;
-        }
-
-        .call-header {
-            height: 64px;
-            min-height: 64px;
-            padding: 0 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: #0d0d0d;
-            border-bottom: 1px solid #292929;
-        }
-
-        .call-title {
-            font-weight: 700;
-        }
-
-        .call-type {
-            margin-top: 3px;
-            color: #888;
-            font-size: 12px;
-        }
-
-        .videos {
-            position: relative;
-            flex: 1;
-            min-height: 0;
-            overflow: hidden;
-            background: #050505;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        #remoteVideo {
-            position: absolute;
-            inset: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            background: #050505;
-            display: none;
-            z-index: 1;
-        }
-
-        #localVideo {
-            position: absolute;
-            right: 20px;
-            bottom: 20px;
-            width: 240px;
-            max-width: 30vw;
-            aspect-ratio: 16 / 9;
-            object-fit: cover;
-            background: #111;
-            border: 2px solid #444;
-            border-radius: 12px;
-            display: none;
-            z-index: 5;
-        }
-
-        .remote-placeholder {
-            position: absolute;
-            inset: 0;
-            z-index: 2;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            color: #777;
-            pointer-events: none;
-        }
-
-        .remote-placeholder-icon {
-            margin-bottom: 15px;
-            font-size: 60px;
-        }
-
-        .remote-placeholder-text {
-            font-size: 15px;
-            text-align: center;
-        }
-
-        .call-controls {
-            min-height: 92px;
-            padding: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            background: #0d0d0d;
-            border-top: 1px solid #292929;
-        }
-
-        .control-button {
-            min-width: 85px;
-            height: 60px;
-            padding: 5px 10px;
-            background: #181818;
-            color: white;
-            border: 1px solid #303030;
-            border-radius: 12px;
-            cursor: pointer;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 4px;
-        }
-
-        .control-button:hover {
-            background: #252525;
-        }
-
-        .control-button.active {
-            background: #252525;
-            border-color: #666;
-        }
-
-        .control-button.danger {
-            background: #b91c1c;
-            border-color: #dc2626;
-        }
-
-        .control-button.danger:hover {
-            background: #dc2626;
-        }
-
-        .control-icon {
-            font-size: 20px;
-        }
-
-        .control-text {
-            font-size: 11px;
-        }
-
-        .toast {
-            position: fixed;
-            right: 20px;
-            bottom: 20px;
-            z-index: 3000;
-            padding: 12px 16px;
-            background: #171717;
-            border: 1px solid #333;
-            border-radius: 10px;
-            color: white;
-            opacity: 0;
-            transform: translateY(10px);
-            pointer-events: none;
-            transition: 0.2s;
-        }
-
-        .toast.show {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        @media (max-width: 700px) {
-
-            .topbar {
-                height: 56px;
-                min-height: 56px;
-                padding: 0 14px;
-            }
-
-            .sidebar {
-                width: 170px;
-                min-width: 170px;
-            }
-
-            .sidebar-title {
-                padding: 14px 10px;
-                font-size: 11px;
-            }
-
-            #messages {
-                padding: 12px;
-            }
-
-            .input-area {
-                padding: 8px;
-            }
-
-            #sendButton {
-                padding: 0 14px;
-            }
-
-            #localVideo {
-                right: 10px;
-                bottom: 10px;
-                width: 145px;
-                max-width: 42vw;
-                border-radius: 9px;
-            }
-
-            .call-header {
-                height: 55px;
-                min-height: 55px;
-                padding: 0 12px;
-            }
-
-            .call-controls {
-                min-height: 82px;
-                padding: 8px 5px;
-                gap: 5px;
-            }
-
-            .control-button {
-                min-width: 67px;
-                height: 58px;
-                padding: 3px;
-            }
-
-            .control-icon {
-                font-size: 18px;
-            }
-
-            .control-text {
-                font-size: 9px;
-            }
-
-            .remote-placeholder-icon {
-                font-size: 45px;
-            }
-
-            .remote-placeholder-text {
-                padding: 0 20px;
-                font-size: 13px;
-            }
-        }
-    </style>
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
 </head>
 
-<body>
+<body class="chat-body">
+
+<div class="background-grid"></div>
 
 <div class="app">
 
-    <div class="topbar">
+    <aside class="sidebar">
 
-        <div class="logo">
-            ANONIM
-        </div>
+        <div class="sidebar-brand">
 
-        <div class="username">
-            {{ username }}
-        </div>
-
-    </div>
-
-
-    <div class="main">
-
-        <aside class="sidebar">
-
-            <div class="sidebar-title">
-                Çevrimiçi kullanıcılar
+            <div class="mini-logo">
+                A
             </div>
 
-            <div id="userList">
+            <div>
+                <strong>ANONIM</strong>
+                <small>SPACE</small>
+            </div>
 
-                <div class="empty">
-                    Kullanıcılar yükleniyor...
+        </div>
+
+        <div class="server-status">
+            <span></span>
+            SYSTEM ONLINE
+        </div>
+
+        <div class="side-title">
+            CHANNELS
+        </div>
+
+        <div class="channel active">
+
+            <div>
+                #
+            </div>
+
+            <span>
+                Genel
+            </span>
+
+        </div>
+
+        <div class="side-title users-title">
+
+            ONLINE
+
+            <span id="onlineCount">
+                0
+            </span>
+
+        </div>
+
+        <div
+            class="user-list"
+            id="userList"
+        ></div>
+
+        <div class="sidebar-bottom">
+
+            <div class="profile">
+
+                <div
+                    class="profile-avatar"
+                    id="profileAvatar"
+                >
+                    {{ username[0]|upper }}
+                </div>
+
+                <div class="profile-text">
+
+                    <strong>
+                        {{ username }}
+                    </strong>
+
+                    <span>
+                        online
+                    </span>
+
+                </div>
+
+                <a
+                    href="/logout"
+                    class="logout"
+                >
+                    ↪
+                </a>
+
+            </div>
+
+        </div>
+
+    </aside>
+
+
+    <main class="main">
+
+        <header class="topbar">
+
+            <div class="channel-title">
+
+                <div class="hash">
+                    #
+                </div>
+
+                <div>
+
+                    <strong>
+                        Genel
+                    </strong>
+
+                    <span>
+                        Herkese açık sohbet
+                    </span>
+
                 </div>
 
             </div>
 
-        </aside>
+            <div class="top-actions">
 
+                <div class="connection">
 
-        <section class="chat-area">
+                    <span></span>
 
-            <div id="messages"></div>
+                    CONNECTED
 
+                </div>
 
-            <div class="input-area">
-
-                <input
-                    id="messageInput"
-                    type="text"
-                    maxlength="500"
-                    placeholder="Mesaj yaz..."
-                    autocomplete="off"
+                <div
+                    class="clock"
+                    id="clock"
                 >
+                    00:00
+                </div>
 
-                <button
-                    id="sendButton"
-                    type="button"
-                >
-                    Gönder
-                </button>
+            </div>
+
+        </header>
+
+
+        <section
+            class="messages"
+            id="messages"
+        >
+
+            <div class="welcome">
+
+                <div class="welcome-logo">
+                    A
+                </div>
+
+                <div class="welcome-tag">
+                    ANONIM CHAT
+                </div>
+
+                <h1>
+                    Hoş geldin,
+                    <span>{{ username }}</span>.
+                </h1>
+
+                <p>
+                    Burası herkesin konuşabildiği
+                    anonim alan. Bir kullanıcı seçip
+                    sesli veya görüntülü arama başlatabilirsin.
+                </p>
+
+                <div class="welcome-features">
+
+                    <div>
+                        <b>◉</b>
+                        <span>Gerçek zamanlı chat</span>
+                    </div>
+
+                    <div>
+                        <b>◉</b>
+                        <span>Sesli arama</span>
+                    </div>
+
+                    <div>
+                        <b>◉</b>
+                        <span>Görüntülü arama</span>
+                    </div>
+
+                </div>
 
             </div>
 
         </section>
 
-    </div>
+
+        <form
+            class="composer"
+            id="messageForm"
+        >
+
+            <button
+                type="button"
+                class="add-button"
+            >
+                +
+            </button>
+
+            <input
+                type="text"
+                id="messageInput"
+                maxlength="500"
+                autocomplete="off"
+                placeholder="Bir mesaj yaz..."
+            >
+
+            <span
+                class="counter"
+                id="counter"
+            >
+                0/500
+            </span>
+
+            <button
+                type="submit"
+                class="send-button"
+            >
+                →
+            </button>
+
+        </form>
+
+    </main>
 
 </div>
 
 
 <div
-    id="incomingCall"
-    class="incoming-call"
+    class="incoming-overlay"
+    id="incomingOverlay"
 >
 
-    <div
-        id="incomingTitle"
-        class="incoming-title"
-    >
-        Gelen arama
-    </div>
+    <div class="incoming-card">
 
-
-    <div
-        id="incomingText"
-        class="incoming-text"
-    >
-        Bir kullanıcı seni arıyor.
-    </div>
-
-
-    <div class="incoming-buttons">
-
-        <button
-            id="acceptCallButton"
-            type="button"
-        >
-            Kabul Et
-        </button>
-
-
-        <button
-            id="rejectCallButton"
-            type="button"
-        >
-            Reddet
-        </button>
-
-    </div>
-
-</div>
-
-
-<div
-    id="callPanel"
-    class="call-panel"
->
-
-    <div class="call-header">
-
-        <div>
-
-            <div
-                id="callTitle"
-                class="call-title"
-            >
-                Arama
-            </div>
-
-
-            <div
-                id="callType"
-                class="call-type"
-            >
-                Video araması
-            </div>
-
-        </div>
-
-    </div>
-
-
-    <div class="videos">
+        <div class="incoming-pulse"></div>
 
         <div
-            id="remotePlaceholder"
-            class="remote-placeholder"
+            class="call-avatar"
+            id="incomingAvatar"
         >
+            ?
+        </div>
 
-            <div class="remote-placeholder-icon">
-                👤
+        <div class="incoming-label">
+            GELEN ARAMA
+        </div>
+
+        <h2 id="incomingName">
+            Kullanıcı
+        </h2>
+
+        <p id="incomingCallType">
+            Arama geliyor
+        </p>
+
+        <div class="incoming-buttons">
+
+            <button
+                class="call-decline"
+                id="rejectCall"
+                type="button"
+            >
+                ✕
+            </button>
+
+            <button
+                class="call-accept"
+                id="acceptCall"
+                type="button"
+            >
+                ✓
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<div
+    class="call-overlay"
+    id="callOverlay"
+>
+
+    <div class="call-window">
+
+        <div class="call-top">
+
+            <span id="callType">
+                VIDEO CALL
+            </span>
+
+            <span id="callStatus">
+                BAĞLANIYOR
+            </span>
+
+        </div>
+
+        <div class="remote-video-container">
+
+            <video
+                id="remoteVideo"
+                autoplay
+                playsinline
+            ></video>
+
+            <div
+                class="remote-placeholder"
+                id="remotePlaceholder"
+            >
+
+                <div
+                    class="big-call-avatar"
+                    id="callAvatar"
+                >
+                    ?
+                </div>
+
+                <h2 id="callName">
+                    Kullanıcı
+                </h2>
+
+                <p id="callSubstatus">
+                    Aranıyor...
+                </p>
+
             </div>
 
-            <div class="remote-placeholder-text">
-                Karşı tarafın görüntüsü bekleniyor...
+            <video
+                id="localVideo"
+                autoplay
+                muted
+                playsinline
+            ></video>
+
+            <div
+                class="call-timer"
+                id="callTimer"
+            >
+                00:00
             </div>
 
         </div>
 
+        <div class="call-controls">
 
-        <video
-            id="remoteVideo"
-            autoplay
-            playsinline
-            webkit-playsinline
-            preload="auto"
-        ></video>
-
-
-        <video
-            id="localVideo"
-            autoplay
-            muted
-            playsinline
-            webkit-playsinline
-        ></video>
-
-    </div>
-
-
-    <div class="call-controls">
-
-        <button
-            id="micButton"
-            class="control-button"
-            type="button"
-        >
-
-            <span class="control-icon">
-                🎤
-            </span>
-
-            <span
-                id="micText"
-                class="control-text"
+            <button
+                id="muteButton"
+                class="control-button"
+                type="button"
             >
-                Mikrofon
-            </span>
+                🎙
+                <span>
+                    Mikrofon
+                </span>
+            </button>
 
-        </button>
-
-
-        <button
-            id="cameraButton"
-            class="control-button"
-            type="button"
-        >
-
-            <span class="control-icon">
+            <button
+                id="cameraButton"
+                class="control-button"
+                type="button"
+            >
                 📷
-            </span>
+                <span>
+                    Kamera
+                </span>
+            </button>
 
-            <span
-                id="cameraText"
-                class="control-text"
+            <button
+                id="hangupButton"
+                class="hangup-button"
+                type="button"
             >
-                Kamera
-            </span>
+                ☎
+            </button>
 
-        </button>
-
-
-        <button
-            id="screenButton"
-            class="control-button"
-            type="button"
-        >
-
-            <span class="control-icon">
-                🖥️
-            </span>
-
-            <span class="control-text">
-                Ekran
-            </span>
-
-        </button>
-
-
-        <button
-            id="endCallButton"
-            class="control-button danger"
-            type="button"
-        >
-
-            <span class="control-icon">
-                ☎️
-            </span>
-
-            <span class="control-text">
-                Kapat
-            </span>
-
-        </button>
+        </div>
 
     </div>
 
@@ -765,123 +407,186 @@
 <audio
     id="remoteAudio"
     autoplay
+    playsinline
 ></audio>
 
 
-<div
-    id="toast"
-    class="toast"
-></div>
-
+<script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
 
 <script>
 
+console.log("ANONIM CHAT JAVASCRIPT BAŞLADI");
+
+
 const socket = io();
 
-const currentUsername = {{ username|tojson }};
 
+const username =
+    {{ username|tojson }};
 
-const userList =
-    document.getElementById("userList");
 
 const messages =
-    document.getElementById("messages");
+    document.getElementById(
+        "messages"
+    );
+
+const messageForm =
+    document.getElementById(
+        "messageForm"
+    );
 
 const messageInput =
-    document.getElementById("messageInput");
+    document.getElementById(
+        "messageInput"
+    );
 
-const sendButton =
-    document.getElementById("sendButton");
+const counter =
+    document.getElementById(
+        "counter"
+    );
 
-const incomingCall =
-    document.getElementById("incomingCall");
+const userList =
+    document.getElementById(
+        "userList"
+    );
 
-const incomingTitle =
-    document.getElementById("incomingTitle");
+const onlineCount =
+    document.getElementById(
+        "onlineCount"
+    );
 
-const incomingText =
-    document.getElementById("incomingText");
+const clock =
+    document.getElementById(
+        "clock"
+    );
 
-const acceptCallButton =
-    document.getElementById("acceptCallButton");
+const incomingOverlay =
+    document.getElementById(
+        "incomingOverlay"
+    );
 
-const rejectCallButton =
-    document.getElementById("rejectCallButton");
+const incomingName =
+    document.getElementById(
+        "incomingName"
+    );
 
-const callPanel =
-    document.getElementById("callPanel");
+const incomingAvatar =
+    document.getElementById(
+        "incomingAvatar"
+    );
 
-const callTitle =
-    document.getElementById("callTitle");
+const incomingCallType =
+    document.getElementById(
+        "incomingCallType"
+    );
+
+const acceptCall =
+    document.getElementById(
+        "acceptCall"
+    );
+
+const rejectCall =
+    document.getElementById(
+        "rejectCall"
+    );
+
+const callOverlay =
+    document.getElementById(
+        "callOverlay"
+    );
+
+const callName =
+    document.getElementById(
+        "callName"
+    );
+
+const callAvatar =
+    document.getElementById(
+        "callAvatar"
+    );
+
+const callStatus =
+    document.getElementById(
+        "callStatus"
+    );
+
+const callSubstatus =
+    document.getElementById(
+        "callSubstatus"
+    );
+
+const callTimer =
+    document.getElementById(
+        "callTimer"
+    );
 
 const callType =
-    document.getElementById("callType");
+    document.getElementById(
+        "callType"
+    );
 
-const remoteVideo =
-    document.getElementById("remoteVideo");
-
-const localVideo =
-    document.getElementById("localVideo");
-
-const remoteAudio =
-    document.getElementById("remoteAudio");
-
-const remotePlaceholder =
-    document.getElementById("remotePlaceholder");
-
-const micButton =
-    document.getElementById("micButton");
-
-const micText =
-    document.getElementById("micText");
+const muteButton =
+    document.getElementById(
+        "muteButton"
+    );
 
 const cameraButton =
-    document.getElementById("cameraButton");
+    document.getElementById(
+        "cameraButton"
+    );
 
-const cameraText =
-    document.getElementById("cameraText");
+const hangupButton =
+    document.getElementById(
+        "hangupButton"
+    );
 
-const screenButton =
-    document.getElementById("screenButton");
+const remoteVideo =
+    document.getElementById(
+        "remoteVideo"
+    );
 
-const endCallButton =
-    document.getElementById("endCallButton");
+const localVideo =
+    document.getElementById(
+        "localVideo"
+    );
 
-const toast =
-    document.getElementById("toast");
+const remotePlaceholder =
+    document.getElementById(
+        "remotePlaceholder"
+    );
+
+const remoteAudio =
+    document.getElementById(
+        "remoteAudio"
+    );
 
 
-let peerConnection = null;
+let peerConnection =
+    null;
 
-let localStream = null;
+let localStream =
+    null;
 
-let remoteStream = null;
+let currentTarget =
+    null;
 
-let pendingCandidates = [];
+let currentTargetName =
+    "";
 
-let currentCallTarget = null;
+let incomingCall =
+    null;
 
-let currentCallType = null;
+let callState =
+    "idle";
 
-let incomingCallData = null;
+let timerInterval =
+    null;
 
-let microphoneTrack = null;
+let callSeconds =
+    0;
 
-let cameraTrack = null;
-
-let screenTrack = null;
-
-let audioTransceiver = null;
-
-let videoTransceiver = null;
-
-let videoSender = null;
-
-let isScreenSharing = false;
-
-let micEnabled = true;
-
-let cameraEnabled = true;
+let pendingCandidates =
+    [];
 
 
 const rtcConfig = {
@@ -889,11 +594,13 @@ const rtcConfig = {
     iceServers: [
 
         {
-            urls: "stun:stun.l.google.com:19302"
+            urls:
+                "stun:stun.l.google.com:19302"
         },
 
         {
-            urls: "stun:stun1.l.google.com:19302"
+            urls:
+                "stun:stun1.l.google.com:19302"
         }
 
     ]
@@ -901,156 +608,222 @@ const rtcConfig = {
 };
 
 
-function showToast(message) {
+function colorFromName(name) {
 
-    toast.textContent = message;
+    let hash = 0;
 
-    toast.classList.add("show");
+    for (
+        let i = 0;
+        i < name.length;
+        i++
+    ) {
 
-    setTimeout(() => {
-
-        toast.classList.remove("show");
-
-    }, 2500);
-
-}
-
-
-function addMessage(username, message) {
-
-    const wrapper =
-        document.createElement("div");
-
-    wrapper.className =
-        "message";
-
-
-    const user =
-        document.createElement("div");
-
-    user.className =
-        "message-user";
-
-    user.textContent =
-        username;
-
-
-    const text =
-        document.createElement("div");
-
-    text.className =
-        "message-text";
-
-    text.textContent =
-        message;
-
-
-    wrapper.appendChild(user);
-
-    wrapper.appendChild(text);
-
-    messages.appendChild(wrapper);
-
-
-    messages.scrollTop =
-        messages.scrollHeight;
-
-}
-
-
-function renderUsers(users) {
-
-    userList.innerHTML = "";
-
-
-    const filtered =
-        users.filter(user => {
-
-            return user.username !==
-                currentUsername;
-
-        });
-
-
-    if (filtered.length === 0) {
-
-        const empty =
-            document.createElement("div");
-
-        empty.className =
-            "empty";
-
-        empty.textContent =
-            "Başka kullanıcı yok.";
-
-        userList.appendChild(empty);
-
-        return;
+        hash =
+            name.charCodeAt(i) +
+            ((hash << 5) - hash);
 
     }
 
+    return `hsl(${Math.abs(hash) % 360}, 75%, 60%)`;
 
-    filtered.forEach(user => {
-
-        const element =
-            document.createElement("div");
-
-        element.className =
-            "user";
+}
 
 
-        const name =
-            document.createElement("div");
+function avatarText(name) {
 
-        name.className =
-            "user-name";
+    return name
+        .trim()
+        .charAt(0)
+        .toUpperCase() || "?";
 
-        name.textContent =
-            user.username;
-
-
-        const status =
-            document.createElement("div");
-
-        status.className =
-            "user-status";
-
-        status.textContent =
-            "Çevrimiçi";
+}
 
 
-        element.appendChild(name);
+function updateClock() {
 
-        element.appendChild(status);
+    const now =
+        new Date();
 
-
-        element.addEventListener(
-            "click",
-            () => {
-
-                if (peerConnection) {
-
-                    showToast(
-                        "Zaten bir aramadasın."
-                    );
-
-                    return;
-
-                }
-
-
-                startCall(
-                    user.sid,
-                    "video"
-                );
-
+    clock.textContent =
+        now.toLocaleTimeString(
+            "tr-TR",
+            {
+                hour: "2-digit",
+                minute: "2-digit"
             }
         );
 
+}
 
-        userList.appendChild(element);
 
-    });
+setInterval(
+    updateClock,
+    1000
+);
+
+updateClock();
+
+
+messageInput.addEventListener(
+    "input",
+    () => {
+
+        counter.textContent =
+            `${messageInput.value.length}/500`;
+
+    }
+);
+
+
+messageForm.addEventListener(
+    "submit",
+    event => {
+
+        event.preventDefault();
+
+        const message =
+            messageInput.value.trim();
+
+        if (!message) {
+            return;
+        }
+
+        socket.emit(
+            "message",
+            {
+                message:
+                    message
+            }
+        );
+
+        messageInput.value =
+            "";
+
+        counter.textContent =
+            "0/500";
+
+    }
+);
+
+
+function addMessage(data) {
+
+    const welcome =
+        messages.querySelector(
+            ".welcome"
+        );
+
+    if (welcome) {
+        welcome.remove();
+    }
+
+    const wrapper =
+        document.createElement(
+            "div"
+        );
+
+    const own =
+        data.username === username;
+
+    wrapper.className =
+        own
+            ? "message own"
+            : "message";
+
+    const avatar =
+        document.createElement(
+            "div"
+        );
+
+    avatar.className =
+        "message-avatar";
+
+    avatar.textContent =
+        avatarText(
+            data.username
+        );
+
+    avatar.style.background =
+        colorFromName(
+            data.username
+        );
+
+    const content =
+        document.createElement(
+            "div"
+        );
+
+    content.className =
+        "message-content";
+
+    const meta =
+        document.createElement(
+            "div"
+        );
+
+    meta.className =
+        "message-meta";
+
+    const name =
+        document.createElement(
+            "strong"
+        );
+
+    name.textContent =
+        data.username;
+
+    const time =
+        document.createElement(
+            "span"
+        );
+
+    time.textContent =
+        new Date().toLocaleTimeString(
+            "tr-TR",
+            {
+                hour: "2-digit",
+                minute: "2-digit"
+            }
+        );
+
+    const text =
+        document.createElement(
+            "p"
+        );
+
+    text.textContent =
+        data.message;
+
+    meta.appendChild(
+        name
+    );
+
+    meta.appendChild(
+        time
+    );
+
+    content.appendChild(
+        meta
+    );
+
+    content.appendChild(
+        text
+    );
+
+    wrapper.appendChild(
+        avatar
+    );
+
+    wrapper.appendChild(
+        content
+    );
+
+    messages.appendChild(
+        wrapper
+    );
+
+    messages.scrollTop =
+        messages.scrollHeight;
 
 }
 
@@ -1060,7 +833,7 @@ socket.on(
     () => {
 
         console.log(
-            "SOCKET CONNECTED:",
+            "SOCKET BAĞLANDI:",
             socket.id
         );
 
@@ -1073,18 +846,8 @@ socket.on(
     () => {
 
         console.log(
-            "SOCKET DISCONNECTED"
+            "SOCKET KESİLDİ"
         );
-
-    }
-);
-
-
-socket.on(
-    "user_list",
-    users => {
-
-        renderUsers(users);
 
     }
 );
@@ -1095,98 +858,288 @@ socket.on(
     data => {
 
         addMessage(
-            data.username,
-            data.message
+            data
         );
 
     }
 );
 
 
-function sendMessage() {
+socket.on(
+    "user_list",
+    users => {
 
-    const message =
-        messageInput.value.trim();
+        console.log(
+            "KULLANICI LİSTESİ:",
+            users
+        );
+
+        userList.innerHTML =
+            "";
+
+        onlineCount.textContent =
+            users.length;
+
+        let otherUsers =
+            0;
+
+        users.forEach(
+            user => {
+
+                const item =
+                    document.createElement(
+                        "div"
+                    );
+
+                item.className =
+                    "user-item";
+
+                const avatar =
+                    document.createElement(
+                        "div"
+                    );
+
+                avatar.className =
+                    "user-avatar";
+
+                avatar.textContent =
+                    avatarText(
+                        user.username
+                    );
+
+                avatar.style.background =
+                    colorFromName(
+                        user.username
+                    );
+
+                const info =
+                    document.createElement(
+                        "div"
+                    );
+
+                info.className =
+                    "user-info";
+
+                const name =
+                    document.createElement(
+                        "strong"
+                    );
+
+                name.textContent =
+                    user.username;
+
+                const status =
+                    document.createElement(
+                        "span"
+                    );
+
+                status.textContent =
+                    user.sid === socket.id
+                        ? "SEN"
+                        : "ONLINE";
+
+                info.appendChild(
+                    name
+                );
+
+                info.appendChild(
+                    status
+                );
+
+                item.appendChild(
+                    avatar
+                );
+
+                item.appendChild(
+                    info
+                );
 
 
-    if (!message) {
-        return;
-    }
+                if (
+                    user.sid !== socket.id
+                ) {
+
+                    otherUsers++;
 
 
-    socket.emit(
-        "message",
-        {
-            message: message
+                    const buttons =
+                        document.createElement(
+                            "div"
+                        );
+
+                    buttons.className =
+                        "user-call-buttons";
+
+
+                    const voice =
+                        document.createElement(
+                            "button"
+                        );
+
+                    voice.className =
+                        "user-call-button";
+
+                    voice.textContent =
+                        "☎";
+
+                    voice.title =
+                        "Sesli ara";
+
+                    voice.type =
+                        "button";
+
+
+                    voice.addEventListener(
+                        "click",
+                        () => {
+
+                            console.log(
+                                "SESLİ ARAMA BUTONUNA BASILDI"
+                            );
+
+                            startCall(
+                                user.sid,
+                                user.username,
+                                false
+                            );
+
+                        }
+                    );
+
+
+                    const video =
+                        document.createElement(
+                            "button"
+                        );
+
+                    video.className =
+                        "user-video-button";
+
+                    video.textContent =
+                        "▣";
+
+                    video.title =
+                        "Görüntülü ara";
+
+                    video.type =
+                        "button";
+
+
+                    video.addEventListener(
+                        "click",
+                        () => {
+
+                            console.log(
+                                "GÖRÜNTÜLÜ ARAMA BUTONUNA BASILDI"
+                            );
+
+                            startCall(
+                                user.sid,
+                                user.username,
+                                true
+                            );
+
+                        }
+                    );
+
+
+                    buttons.appendChild(
+                        voice
+                    );
+
+                    buttons.appendChild(
+                        video
+                    );
+
+                    item.appendChild(
+                        buttons
+                    );
+
+                }
+
+
+                userList.appendChild(
+                    item
+                );
+
+            }
+        );
+
+
+        if (
+            otherUsers === 0
+        ) {
+
+            const empty =
+                document.createElement(
+                    "div"
+                );
+
+            empty.className =
+                "empty-users";
+
+            empty.textContent =
+                "Şu an başka kullanıcı yok.";
+
+            userList.appendChild(
+                empty
+            );
+
         }
+
+    }
+);
+
+
+async function getMedia(
+    video
+) {
+
+    console.log(
+        "GET MEDIA BAŞLADI:",
+        video
     );
 
 
-    messageInput.value =
-        "";
+    if (localStream) {
 
-    messageInput.focus();
+        console.log(
+            "MEVCUT LOCAL STREAM KULLANILIYOR"
+        );
 
-}
-
-
-sendButton.addEventListener(
-    "click",
-    sendMessage
-);
-
-
-messageInput.addEventListener(
-    "keydown",
-    event => {
-
-        if (event.key === "Enter") {
-
-            event.preventDefault();
-
-            sendMessage();
-
-        }
-
-    }
-);
-
-
-async function getMedia(video) {
-
-    const audioConstraints = {
-
-        echoCancellation: true,
-
-        noiseSuppression: true,
-
-        autoGainControl: true
-
-    };
-
-
-    if (!video) {
-
-        return await navigator.mediaDevices.getUserMedia({
-
-            audio: audioConstraints,
-
-            video: false
-
-        });
+        return localStream;
 
     }
 
 
-    try {
+    if (
+        !navigator.mediaDevices ||
+        !navigator.mediaDevices.getUserMedia
+    ) {
 
-        const stream =
-            await navigator.mediaDevices.getUserMedia({
+        throw new Error(
+            "getUserMedia desteklenmiyor"
+        );
 
-                audio: audioConstraints,
+    }
 
-                video: {
 
+    console.log(
+        "MİKROFON İZNİ İSTENİYOR"
+    );
+
+
+    const constraints = {
+
+        audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true
+        },
+
+        video:
+            video
+                ? {
                     width: {
                         ideal: 1280
                     },
@@ -1195,269 +1148,170 @@ async function getMedia(video) {
                         ideal: 720
                     },
 
-                    frameRate: {
-                        ideal: 30
-                    }
+                    facingMode:
+                        "user"
+                }
+                : false
+
+    };
+
+
+    localStream =
+        await navigator.mediaDevices
+            .getUserMedia(
+                constraints
+            );
+
+
+    console.log(
+        "MİKROFON İZNİ ALINDI"
+    );
+
+
+    const audioTracks =
+        localStream.getAudioTracks();
+
+
+    console.log(
+        "AUDIO TRACK SAYISI:",
+        audioTracks.length
+    );
+
+
+    audioTracks.forEach(
+        track => {
+
+            console.log(
+                "MİKROFON TRACK:",
+                track.label,
+                track.enabled,
+                track.readyState
+            );
+
+            track.enabled =
+                true;
+
+        }
+    );
+
+
+    if (video) {
+
+        localVideo.srcObject =
+            localStream;
+
+        localVideo.muted =
+            true;
+
+        localVideo.play()
+            .catch(
+                error => {
+
+                    console.error(
+                        "LOCAL VIDEO HATASI:",
+                        error
+                    );
 
                 }
-
-            });
-
-
-        console.log(
-            "KAMERA + MIKROFON ALINDI"
-        );
-
-
-        console.log(
-            "VIDEO TRACK:",
-            stream.getVideoTracks()
-        );
-
-
-        return stream;
-
-    } catch (error) {
-
-        console.warn(
-            "Kamera alınamadı:",
-            error
-        );
-
-
-        showToast(
-            "Kamera açılamadı, ses ile devam ediliyor."
-        );
-
-
-        const audioOnly =
-            await navigator.mediaDevices.getUserMedia({
-
-                audio: audioConstraints,
-
-                video: false
-
-            });
-
-
-        return audioOnly;
+            );
 
     }
+
+
+    return localStream;
 
 }
 
 
-function createPeerConnection() {
+function createPeer(
+    target
+) {
 
-    peerConnection =
+    console.log(
+        "PEER OLUŞTURULUYOR:",
+        target
+    );
+
+
+    const pc =
         new RTCPeerConnection(
             rtcConfig
         );
 
 
-    remoteStream =
-        new MediaStream();
-
-
-    pendingCandidates =
-        [];
-
-
-    peerConnection.onicecandidate =
+    pc.onicecandidate =
         event => {
 
-            if (!event.candidate) {
+            if (
+                !event.candidate
+            ) {
+
                 return;
+
             }
 
 
-            if (!currentCallTarget) {
-                return;
-            }
+            console.log(
+                "ICE CANDIDATE GÖNDERİLİYOR"
+            );
 
 
             socket.emit(
                 "ice_candidate",
                 {
-
                     target:
-                        currentCallTarget,
+                        target,
 
                     candidate:
                         event.candidate
-
                 }
             );
 
         };
 
 
-    peerConnection.onconnectionstatechange =
-        () => {
-
-            console.log(
-                "CONNECTION:",
-                peerConnection.connectionState
-            );
-
-
-            if (
-                peerConnection.connectionState ===
-                "failed"
-            ) {
-
-                showToast(
-                    "WebRTC bağlantısı başarısız."
-                );
-
-            }
-
-        };
-
-
-    peerConnection.oniceconnectionstatechange =
-        () => {
-
-            console.log(
-                "ICE:",
-                peerConnection.iceConnectionState
-            );
-
-        };
-
-
-    peerConnection.ontrack =
+    pc.ontrack =
         event => {
 
             console.log(
-                "REMOTE TRACK:",
+                "================================"
+            );
+
+            console.log(
+                "GELEN TRACK:",
                 event.track.kind
             );
 
-
-            if (
-                !remoteStream
-                    .getTracks()
-                    .some(track =>
-                        track.id ===
-                        event.track.id
-                    )
-            ) {
-
-                remoteStream.addTrack(
-                    event.track
-                );
-
-            }
-
+            console.log(
+                "TRACK ENABLED:",
+                event.track.enabled
+            );
 
             console.log(
-                "REMOTE STREAM TRACKS:",
-                remoteStream
-                    .getTracks()
-                    .map(track =>
-                        track.kind
-                    )
+                "TRACK STATE:",
+                event.track.readyState
+            );
+
+            console.log(
+                "================================"
             );
 
 
-            if (
-                event.track.kind ===
-                "video"
-            ) {
+            event.track.enabled =
+                true;
 
-                console.log(
-                    "UZAK VIDEO GELDI"
+
+            const stream =
+                event.streams[0];
+
+
+            if (!stream) {
+
+                console.error(
+                    "GELEN STREAM YOK"
                 );
 
-
-                remoteVideo.srcObject =
-                    remoteStream;
-
-
-                remoteVideo.style.display =
-                    "block";
-
-
-                remotePlaceholder.style.display =
-                    "none";
-
-
-                remoteVideo.muted =
-                    false;
-
-
-                remoteVideo.setAttribute(
-                    "autoplay",
-                    ""
-                );
-
-
-                remoteVideo.setAttribute(
-                    "playsinline",
-                    ""
-                );
-
-
-                remoteVideo.setAttribute(
-                    "webkit-playsinline",
-                    ""
-                );
-
-
-                const playRemoteVideo =
-                    async () => {
-
-                        try {
-
-                            await remoteVideo.play();
-
-
-                            console.log(
-                                "REMOTE VIDEO OYNUYOR"
-                            );
-
-                        } catch (error) {
-
-                            console.error(
-                                "REMOTE VIDEO PLAY HATASI:",
-                                error
-                            );
-
-                            showToast(
-                                "Video oynatılamadı."
-                            );
-
-                        }
-
-                    };
-
-
-                playRemoteVideo();
-
-
-                event.track.onunmute =
-                    () => {
-
-                        console.log(
-                            "REMOTE VIDEO UNMUTE"
-                        );
-
-
-                        remoteVideo.play()
-                            .catch(() => {});
-
-                    };
-
-
-                event.track.onmute =
-                    () => {
-
-                        console.log(
-                            "REMOTE VIDEO MUTE"
-                        );
-
-                    };
+                return;
 
             }
 
@@ -1467,143 +1321,174 @@ function createPeerConnection() {
                 "audio"
             ) {
 
+                console.log(
+                    "UZAK MİKROFON GELDİ"
+                );
+
+
                 remoteAudio.srcObject =
-                    remoteStream;
+                    stream;
+
+                remoteAudio.muted =
+                    false;
+
+                remoteAudio.volume =
+                    1;
 
 
                 remoteAudio.play()
-                    .then(() => {
+                    .then(
+                        () => {
 
-                        console.log(
-                            "REMOTE AUDIO OYNUYOR"
-                        );
+                            console.log(
+                                "UZAK SES OYNATILIYOR"
+                            );
 
-                    })
-                    .catch(error => {
+                        }
+                    )
+                    .catch(
+                        error => {
 
-                        console.error(
-                            "REMOTE AUDIO PLAY HATASI:",
-                            error
-                        );
+                            console.error(
+                                "UZAK SES OYNATMA HATASI:",
+                                error
+                            );
 
-                    });
+                        }
+                    );
 
             }
+
+
+            if (
+                event.track.kind ===
+                "video"
+            ) {
+
+                console.log(
+                    "UZAK VIDEO GELDİ"
+                );
+
+
+                remoteVideo.srcObject =
+                    stream;
+
+                remoteVideo.muted =
+                    false;
+
+                remoteVideo.play()
+                    .catch(
+                        error => {
+
+                            console.error(
+                                "UZAK VIDEO HATASI:",
+                                error
+                            );
+
+                        }
+                    );
+
+
+                remotePlaceholder.style.display =
+                    "none";
+
+            }
+
+
+            callState =
+                "connected";
+
+            callStatus.textContent =
+                "BAĞLANDI";
+
+            callSubstatus.textContent =
+                "Arama aktif";
+
+            startTimer();
 
         };
 
 
-    const localAudioTrack =
-        localStream
-            ? localStream.getAudioTracks()[0]
-            : null;
+    pc.onconnectionstatechange =
+        () => {
+
+            console.log(
+                "WEBRTC DURUMU:",
+                pc.connectionState
+            );
+
+        };
 
 
-    audioTransceiver =
-        peerConnection.addTransceiver(
-            "audio",
-            {
+    pc.oniceconnectionstatechange =
+        () => {
 
-                direction:
-                    localAudioTrack
-                        ? "sendrecv"
-                        : "recvonly"
+            console.log(
+                "ICE DURUMU:",
+                pc.iceConnectionState
+            );
+
+        };
+
+
+    if (localStream) {
+
+        const tracks =
+            localStream.getTracks();
+
+
+        console.log(
+            "LOCAL TRACK SAYISI:",
+            tracks.length
+        );
+
+
+        tracks.forEach(
+            track => {
+
+                console.log(
+                    "GÖNDERİLEN TRACK:",
+                    track.kind,
+                    track.enabled,
+                    track.readyState
+                );
+
+
+                pc.addTrack(
+                    track,
+                    localStream
+                );
 
             }
         );
 
+    } else {
 
-    if (localAudioTrack) {
-
-        audioTransceiver.sender.replaceTrack(
-            localAudioTrack
-        );
-
-
-        microphoneTrack =
-            localAudioTrack;
-
-    }
-
-
-    if (
-        currentCallType ===
-        "video"
-    ) {
-
-        const localVideoTrack =
-            localStream
-                ? localStream.getVideoTracks()[0]
-                : null;
-
-
-        videoTransceiver =
-            peerConnection.addTransceiver(
-                "video",
-                {
-
-                    direction:
-                        localVideoTrack
-                            ? "sendrecv"
-                            : "recvonly"
-
-                }
-            );
-
-
-        videoSender =
-            videoTransceiver.sender;
-
-
-        if (localVideoTrack) {
-
-            videoSender.replaceTrack(
-                localVideoTrack
-            );
-
-
-            cameraTrack =
-                localVideoTrack;
-
-        }
-
-
-        console.log(
-            "VIDEO TRANSCEIVER:",
-            videoTransceiver
+        console.error(
+            "LOCAL STREAM YOK!"
         );
 
     }
 
 
-    console.log(
-        "AUDIO TRANSCEIVER:",
-        audioTransceiver
-    );
-
-
-    console.log(
-        "VIDEO SENDER:",
-        videoSender
-    );
+    return pc;
 
 }
 
 
-async function flushPendingCandidates() {
+async function flushCandidates() {
 
     if (!peerConnection) {
-        return;
-    }
-
-
-    if (
-        !peerConnection.remoteDescription
-    ) {
 
         return;
 
     }
+
+
+    console.log(
+        "BEKLEYEN ICE CANDIDATE:",
+        pendingCandidates.length
+    );
 
 
     for (
@@ -1613,16 +1498,19 @@ async function flushPendingCandidates() {
 
         try {
 
-            await peerConnection.addIceCandidate(
-                new RTCIceCandidate(
-                    candidate
-                )
-            );
+            await peerConnection
+                .addIceCandidate(
+                    new RTCIceCandidate(
+                        candidate
+                    )
+                );
 
-        } catch (error) {
+        } catch (
+            error
+        ) {
 
             console.error(
-                "ICE CANDIDATE HATASI:",
+                "ICE EKLEME HATASI:",
                 error
             );
 
@@ -1637,140 +1525,52 @@ async function flushPendingCandidates() {
 }
 
 
-function openCallPanel(
-    username,
-    type
+async function startCall(
+    target,
+    name,
+    video
 ) {
 
-    callPanel.classList.add(
-        "active"
+    console.log(
+        "================================"
+    );
+
+    console.log(
+        "ARAMA BUTONUNA BASILDI"
+    );
+
+    console.log(
+        "TARGET:",
+        target
+    );
+
+    console.log(
+        "NAME:",
+        name
+    );
+
+    console.log(
+        "VIDEO:",
+        video
+    );
+
+    console.log(
+        "CALL STATE:",
+        callState
+    );
+
+    console.log(
+        "================================"
     );
 
 
-    callTitle.textContent =
-        username;
-
-
-    currentCallType =
-        type;
-
-
     if (
-        type ===
-        "video"
+        callState !==
+        "idle"
     ) {
 
-        callType.textContent =
-            "Video araması";
-
-
-        remotePlaceholder.style.display =
-            "flex";
-
-
-        remoteVideo.style.display =
-            "none";
-
-
-        screenButton.style.display =
-            "flex";
-
-
-        cameraButton.style.display =
-            cameraTrack
-                ? "flex"
-                : "none";
-
-
-        localVideo.style.display =
-            cameraTrack
-                ? "block"
-                : "none";
-
-    } else {
-
-        callType.textContent =
-            "Sesli arama";
-
-
-        remoteVideo.style.display =
-            "none";
-
-
-        localVideo.style.display =
-            "none";
-
-
-        remotePlaceholder.style.display =
-            "flex";
-
-
-        screenButton.style.display =
-            "none";
-
-
-        cameraButton.style.display =
-            "none";
-
-    }
-
-
-    micButton.style.display =
-        microphoneTrack
-            ? "flex"
-            : "none";
-
-
-    updateButtons();
-
-}
-
-
-function updateButtons() {
-
-    if (microphoneTrack) {
-
-        micText.textContent =
-            micEnabled
-                ? "Mikrofon"
-                : "Mikrofon Kapalı";
-
-
-        micButton.classList.toggle(
-            "active",
-            !micEnabled
-        );
-
-    }
-
-
-    if (cameraTrack) {
-
-        cameraText.textContent =
-            cameraEnabled
-                ? "Kamera"
-                : "Kamera Kapalı";
-
-
-        cameraButton.classList.toggle(
-            "active",
-            !cameraEnabled
-        );
-
-    }
-
-}
-
-
-async function startCall(
-    target,
-    type
-) {
-
-    if (peerConnection) {
-
-        showToast(
-            "Zaten aramadasın."
+        console.log(
+            "ARAMA ENGELLENDİ: ZATEN ARAMADASIN"
         );
 
         return;
@@ -1778,124 +1578,158 @@ async function startCall(
     }
 
 
-    currentCallTarget =
-        target;
-
-
-    currentCallType =
-        type;
-
-
     try {
 
-        localStream =
-            await getMedia(
-                type ===
-                "video"
+        callState =
+            "calling";
+
+        currentTarget =
+            target;
+
+        currentTargetName =
+            name;
+
+
+        callType.textContent =
+            video
+                ? "VIDEO CALL"
+                : "VOICE CALL";
+
+
+        callName.textContent =
+            name;
+
+
+        callAvatar.textContent =
+            avatarText(
+                name
             );
 
 
-        microphoneTrack =
-            localStream
-                .getAudioTracks()[0]
-                || null;
+        callAvatar.style.background =
+            colorFromName(
+                name
+            );
 
 
-        cameraTrack =
-            localStream
-                .getVideoTracks()[0]
-                || null;
+        callStatus.textContent =
+            "ARANIYOR";
 
 
-        micEnabled =
-            true;
+        callSubstatus.textContent =
+            "Mikrofon hazırlanıyor...";
 
 
-        cameraEnabled =
-            true;
+        remotePlaceholder.style.display =
+            "flex";
 
 
-        createPeerConnection();
+        remoteVideo.style.display =
+            video
+                ? "block"
+                : "none";
 
 
-        if (cameraTrack) {
-
-            localVideo.srcObject =
-                localStream;
-
-
-            localVideo.style.display =
-                "block";
-
-        } else {
-
-            localVideo.srcObject =
-                null;
-
-
-            localVideo.style.display =
-                "none";
-
-        }
-
-
-        openCallPanel(
-            "Arama",
-            type
+        callOverlay.classList.add(
+            "show"
         );
 
 
-        const offer =
-            await peerConnection.createOffer();
-
-
-        await peerConnection.setLocalDescription(
-            offer
+        await getMedia(
+            video
         );
 
 
         console.log(
-            "LOCAL OFFER:",
-            offer
+            "GET MEDIA TAMAMLANDI"
+        );
+
+
+        peerConnection =
+            createPeer(
+                target
+            );
+
+
+        console.log(
+            "PEER HAZIR"
+        );
+
+
+        const offer =
+            await peerConnection
+                .createOffer();
+
+
+        console.log(
+            "OFFER OLUŞTURULDU"
+        );
+
+
+        await peerConnection
+            .setLocalDescription(
+                offer
+            );
+
+
+        console.log(
+            "LOCAL DESCRIPTION AYARLANDI"
         );
 
 
         socket.emit(
             "call_user",
             {
-
                 target:
                     target,
 
                 offer:
-                    offer,
+                    peerConnection
+                        .localDescription,
 
                 type:
-                    type
-
+                    video
+                        ? "video"
+                        : "voice"
             }
         );
 
 
         console.log(
-            "ARAMA GÖNDERİLDİ"
+            "CALL_USER SERVER'A GÖNDERİLDİ"
         );
 
-    } catch (error) {
+
+        callSubstatus.textContent =
+            "Karşı taraf bekleniyor...";
+
+
+    } catch (
+        error
+    ) {
+
+        console.error(
+            "================================"
+        );
 
         console.error(
             "ARAMA HATASI:",
             error
         );
 
-
-        showToast(
-            "Arama başlatılamadı: " +
-            error.message
+        console.error(
+            "================================"
         );
 
 
-        cleanupCall();
+        alert(
+            "Mikrofon/kamera erişimi alınamadı."
+        );
+
+
+        endCall(
+            false
+        );
 
     }
 
@@ -1912,7 +1746,10 @@ socket.on(
         );
 
 
-        if (peerConnection) {
+        if (
+            callState !==
+            "idle"
+        ) {
 
             socket.emit(
                 "reject_call",
@@ -1927,168 +1764,205 @@ socket.on(
         }
 
 
-        incomingCallData =
+        incomingCall =
             data;
 
 
-        incomingTitle.textContent =
-            data.username +
-            " arıyor";
+        incomingName.textContent =
+            data.username;
 
 
-        incomingText.textContent =
-            data.type ===
-            "video"
-                ? "Video araması geliyor."
-                : "Sesli arama geliyor.";
+        incomingAvatar.textContent =
+            avatarText(
+                data.username
+            );
 
 
-        incomingCall.classList.add(
-            "active"
+        incomingAvatar.style.background =
+            colorFromName(
+                data.username
+            );
+
+
+        incomingCallType.textContent =
+            data.type === "video"
+                ? "Görüntülü arama geliyor"
+                : "Sesli arama geliyor";
+
+
+        incomingOverlay.classList.add(
+            "show"
         );
 
     }
 );
 
 
-acceptCallButton.addEventListener(
-    "click",
+acceptCall.onclick =
     async () => {
 
-        if (!incomingCallData) {
-            return;
-        }
-
-
-        const data =
-            incomingCallData;
-
-
-        incomingCallData =
-            null;
-
-
-        incomingCall.classList.remove(
-            "active"
+        console.log(
+            "ARAMA KABUL EDİLDİ"
         );
 
 
-        currentCallTarget =
-            data.from;
+        if (!incomingCall) {
+
+            return;
+
+        }
 
 
-        currentCallType =
-            data.type;
+        const call =
+            incomingCall;
+
+
+        incomingCall =
+            null;
+
+
+        incomingOverlay.classList.remove(
+            "show"
+        );
 
 
         try {
 
-            localStream =
-                await getMedia(
-                    data.type ===
-                    "video"
+            callState =
+                "connecting";
+
+
+            currentTarget =
+                call.from;
+
+
+            currentTargetName =
+                call.username;
+
+
+            const isVideo =
+                call.type ===
+                "video";
+
+
+            callType.textContent =
+                isVideo
+                    ? "VIDEO CALL"
+                    : "VOICE CALL";
+
+
+            callName.textContent =
+                call.username;
+
+
+            callAvatar.textContent =
+                avatarText(
+                    call.username
                 );
 
 
-            microphoneTrack =
-                localStream
-                    .getAudioTracks()[0]
-                    || null;
+            callAvatar.style.background =
+                colorFromName(
+                    call.username
+                );
 
 
-            cameraTrack =
-                localStream
-                    .getVideoTracks()[0]
-                    || null;
+            callStatus.textContent =
+                "BAĞLANIYOR";
 
 
-            micEnabled =
-                true;
+            callSubstatus.textContent =
+                "Mikrofon hazırlanıyor...";
 
 
-            cameraEnabled =
-                true;
+            remotePlaceholder.style.display =
+                "flex";
 
 
-            createPeerConnection();
+            remoteVideo.style.display =
+                isVideo
+                    ? "block"
+                    : "none";
 
 
-            if (cameraTrack) {
-
-                localVideo.srcObject =
-                    localStream;
-
-
-                localVideo.style.display =
-                    "block";
-
-            } else {
-
-                localVideo.srcObject =
-                    null;
-
-
-                localVideo.style.display =
-                    "none";
-
-            }
-
-
-            openCallPanel(
-                data.username,
-                data.type
+            callOverlay.classList.add(
+                "show"
             );
 
 
-            await peerConnection.setRemoteDescription(
-                new RTCSessionDescription(
-                    data.offer
-                )
+            await getMedia(
+                isVideo
             );
 
 
             console.log(
-                "REMOTE DESCRIPTION AYARLANDI"
+                "GELEN ARAMA İÇİN MİKROFON HAZIR"
             );
 
 
-            await flushPendingCandidates();
+            peerConnection =
+                createPeer(
+                    call.from
+                );
+
+
+            await peerConnection
+                .setRemoteDescription(
+                    new RTCSessionDescription(
+                        call.offer
+                    )
+                );
+
+
+            console.log(
+                "REMOTE OFFER AYARLANDI"
+            );
+
+
+            await flushCandidates();
 
 
             const answer =
-                await peerConnection.createAnswer();
-
-
-            await peerConnection.setLocalDescription(
-                answer
-            );
+                await peerConnection
+                    .createAnswer();
 
 
             console.log(
-                "LOCAL ANSWER:",
-                answer
+                "ANSWER OLUŞTURULDU"
             );
+
+
+            await peerConnection
+                .setLocalDescription(
+                    answer
+                );
 
 
             socket.emit(
                 "answer_call",
                 {
-
                     target:
-                        data.from,
+                        call.from,
 
                     answer:
-                        answer
-
+                        peerConnection
+                            .localDescription
                 }
             );
 
 
             console.log(
-                "ARAMA KABUL EDİLDİ"
+                "ANSWER SERVER'A GÖNDERİLDİ"
             );
 
-        } catch (error) {
+
+            callSubstatus.textContent =
+                "Karşı taraf bekleniyor...";
+
+
+        } catch (
+            error
+        ) {
 
             console.error(
                 "ARAMA KABUL HATASI:",
@@ -2096,81 +1970,102 @@ acceptCallButton.addEventListener(
             );
 
 
-            showToast(
-                "Arama açılamadı: " +
-                error.message
+            endCall(
+                false
             );
-
-
-            cleanupCall();
 
         }
 
-    }
-);
+    };
 
 
-rejectCallButton.addEventListener(
-    "click",
+rejectCall.onclick =
     () => {
 
-        if (!incomingCallData) {
+        console.log(
+            "ARAMA REDDEDİLDİ"
+        );
+
+
+        if (!incomingCall) {
+
             return;
+
         }
 
 
         socket.emit(
             "reject_call",
             {
-
                 target:
-                    incomingCallData.from
-
+                    incomingCall.from
             }
         );
 
 
-        incomingCallData =
+        incomingCall =
             null;
 
 
-        incomingCall.classList.remove(
-            "active"
+        incomingOverlay.classList.remove(
+            "show"
         );
 
-    }
-);
+    };
 
 
 socket.on(
     "call_answered",
     async data => {
 
+        console.log(
+            "CALL ANSWERED GELDİ"
+        );
+
+
         if (!peerConnection) {
+
+            console.error(
+                "PEER CONNECTION YOK"
+            );
+
             return;
+
         }
 
 
         try {
 
-            await peerConnection.setRemoteDescription(
-                new RTCSessionDescription(
-                    data.answer
-                )
-            );
+            await peerConnection
+                .setRemoteDescription(
+                    new RTCSessionDescription(
+                        data.answer
+                    )
+                );
 
 
             console.log(
-                "ANSWER ALINDI"
+                "REMOTE ANSWER AYARLANDI"
             );
 
 
-            await flushPendingCandidates();
+            await flushCandidates();
 
-        } catch (error) {
+
+            callState =
+                "connecting";
+
+
+            callStatus.textContent =
+                "BAĞLANIYOR";
+
+
+        } catch (
+            error
+        ) {
 
             console.error(
-                "ANSWER HATASI:",
+                "ANSWER AYARLAMA HATASI:",
                 error
             );
 
@@ -2184,37 +2079,59 @@ socket.on(
     "ice_candidate",
     async data => {
 
+        console.log(
+            "ICE CANDIDATE GELDİ"
+        );
+
+
         if (!peerConnection) {
+
+            console.error(
+                "ICE GELDİ AMA PEER YOK"
+            );
+
             return;
+
         }
 
 
         if (
-            !peerConnection.remoteDescription
+            peerConnection.remoteDescription
         ) {
+
+            try {
+
+                await peerConnection
+                    .addIceCandidate(
+                        new RTCIceCandidate(
+                            data.candidate
+                        )
+                    );
+
+
+                console.log(
+                    "ICE CANDIDATE EKLENDİ"
+                );
+
+            } catch (
+                error
+            ) {
+
+                console.error(
+                    "ICE CANDIDATE HATASI:",
+                    error
+                );
+
+            }
+
+        } else {
+
+            console.log(
+                "ICE BEKLEMEYE ALINDI"
+            );
 
             pendingCandidates.push(
                 data.candidate
-            );
-
-            return;
-
-        }
-
-
-        try {
-
-            await peerConnection.addIceCandidate(
-                new RTCIceCandidate(
-                    data.candidate
-                )
-            );
-
-        } catch (error) {
-
-            console.error(
-                "ICE HATASI:",
-                error
             );
 
         }
@@ -2227,12 +2144,29 @@ socket.on(
     "call_rejected",
     () => {
 
-        showToast(
-            "Arama reddedildi."
+        console.log(
+            "ARAMA REDDEDİLDİ"
         );
 
 
-        cleanupCall();
+        callStatus.textContent =
+            "REDDEDİLDİ";
+
+
+        callSubstatus.textContent =
+            "Arama kabul edilmedi";
+
+
+        setTimeout(
+            () => {
+
+                endCall(
+                    false
+                );
+
+            },
+            1000
+        );
 
     }
 );
@@ -2242,13 +2176,20 @@ socket.on(
     "call_busy",
     data => {
 
-        showToast(
+        console.log(
+            "KULLANICI MEŞGUL"
+        );
+
+
+        alert(
             data.message ||
             "Kullanıcı meşgul."
         );
 
 
-        cleanupCall();
+        endCall(
+            false
+        );
 
     }
 );
@@ -2258,290 +2199,105 @@ socket.on(
     "call_ended",
     () => {
 
-        showToast(
-            "Arama sona erdi."
-        );
-
-
-        cleanupCall();
-
-    }
-);
-
-
-micButton.addEventListener(
-    "click",
-    () => {
-
-        if (!microphoneTrack) {
-            return;
-        }
-
-
-        micEnabled =
-            !micEnabled;
-
-
-        microphoneTrack.enabled =
-            micEnabled;
-
-
-        updateButtons();
-
-    }
-);
-
-
-cameraButton.addEventListener(
-    "click",
-    () => {
-
-        if (!cameraTrack) {
-            return;
-        }
-
-
-        cameraEnabled =
-            !cameraEnabled;
-
-
-        cameraTrack.enabled =
-            cameraEnabled;
-
-
-        updateButtons();
-
-    }
-);
-
-
-async function startScreenShare() {
-
-    if (!peerConnection) {
-
-        showToast(
-            "Aktif arama yok."
-        );
-
-        return;
-
-    }
-
-
-    if (
-        currentCallType !==
-        "video"
-    ) {
-
-        showToast(
-            "Ekran paylaşımı video aramasında kullanılabilir."
-        );
-
-        return;
-
-    }
-
-
-    if (isScreenSharing) {
-        return;
-    }
-
-
-    try {
-
         console.log(
-            "EKRAN PAYLAŞIMI BAŞLATILIYOR"
+            "ARAMA SONLANDIRILDI"
         );
 
 
-        const displayStream =
-            await navigator.mediaDevices.getDisplayMedia({
-
-                video: true,
-
-                audio: false
-
-            });
-
-
-        screenTrack =
-            displayStream.getVideoTracks()[0];
-
-
-        if (!videoSender) {
-
-            throw new Error(
-                "Video sender bulunamadı."
-            );
-
-        }
-
-
-        await videoSender.replaceTrack(
-            screenTrack
-        );
-
-
-        isScreenSharing =
-            true;
-
-
-        screenTrack.onended =
-            async () => {
-
-                await stopScreenShare();
-
-            };
-
-
-        screenButton.classList.add(
-            "active"
-        );
-
-
-        console.log(
-            "EKRAN PAYLAŞIMI BAŞLADI"
-        );
-
-    } catch (error) {
-
-        console.error(
-            "EKRAN PAYLAŞIMI HATASI:",
-            error
-        );
-
-
-        showToast(
-            "Ekran paylaşımı başlatılamadı."
+        endCall(
+            false
         );
 
     }
+);
+
+
+function startTimer() {
+
+    stopTimer();
+
+
+    callSeconds =
+        0;
+
+
+    callTimer.textContent =
+        "00:00";
+
+
+    timerInterval =
+        setInterval(
+            () => {
+
+                callSeconds++;
+
+
+                const minutes =
+                    Math.floor(
+                        callSeconds / 60
+                    );
+
+
+                const seconds =
+                    callSeconds % 60;
+
+
+                callTimer.textContent =
+                    `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+
+            },
+            1000
+        );
 
 }
 
 
-async function stopScreenShare() {
+function stopTimer() {
 
-    if (!isScreenSharing) {
-        return;
-    }
+    if (timerInterval) {
 
-
-    console.log(
-        "EKRAN PAYLAŞIMI DURDURULUYOR"
-    );
-
-
-    try {
-
-        if (videoSender) {
-
-            await videoSender.replaceTrack(
-                cameraTrack || null
-            );
-
-        }
-
-    } catch (error) {
-
-        console.error(
-            "VIDEO TRACK DEĞİŞTİRME HATASI:",
-            error
+        clearInterval(
+            timerInterval
         );
 
-    }
-
-
-    if (screenTrack) {
-
-        try {
-            screenTrack.stop();
-        } catch (error) {}
-
-        screenTrack =
+        timerInterval =
             null;
 
     }
 
-
-    isScreenSharing =
-        false;
-
-
-    screenButton.classList.remove(
-        "active"
-    );
-
-
-    console.log(
-        "EKRAN PAYLAŞIMI DURDU"
-    );
-
 }
 
 
-screenButton.addEventListener(
-    "click",
-    async () => {
-
-        console.log(
-            "EKRAN BUTONUNA BASILDI"
-        );
-
-
-        if (isScreenSharing) {
-
-            await stopScreenShare();
-
-        } else {
-
-            await startScreenShare();
-
-        }
-
-    }
-);
-
-
-endCallButton.addEventListener(
-    "click",
-    () => {
-
-        if (currentCallTarget) {
-
-            socket.emit(
-                "end_call",
-                {
-
-                    target:
-                        currentCallTarget
-
-                }
-            );
-
-        }
-
-
-        cleanupCall();
-
-    }
-);
-
-
-function cleanupCall() {
+function endCall(
+    notify = true
+) {
 
     console.log(
-        "CALL CLEANUP"
+        "ARAMA KAPATILIYOR"
     );
 
 
-    if (screenTrack) {
+    if (
+        notify &&
+        currentTarget
+    ) {
 
-        try {
-            screenTrack.stop();
-        } catch (error) {}
+        socket.emit(
+            "end_call",
+            {
+                target:
+                    currentTarget
+            }
+        );
 
-        screenTrack =
+    }
+
+
+    if (peerConnection) {
+
+        peerConnection.close();
+
+        peerConnection =
             null;
 
     }
@@ -2551,92 +2307,19 @@ function cleanupCall() {
 
         localStream
             .getTracks()
-            .forEach(track => {
+            .forEach(
+                track => {
 
-                try {
                     track.stop();
-                } catch (error) {}
 
-            });
-
-    }
+                }
+            );
 
 
-    localStream =
-        null;
-
-
-    if (peerConnection) {
-
-        try {
-
-            peerConnection.ontrack =
-                null;
-
-            peerConnection.onicecandidate =
-                null;
-
-            peerConnection.close();
-
-        } catch (error) {}
+        localStream =
+            null;
 
     }
-
-
-    peerConnection =
-        null;
-
-
-    remoteStream =
-        null;
-
-
-    microphoneTrack =
-        null;
-
-
-    cameraTrack =
-        null;
-
-
-    videoSender =
-        null;
-
-
-    videoTransceiver =
-        null;
-
-
-    audioTransceiver =
-        null;
-
-
-    pendingCandidates =
-        [];
-
-
-    currentCallTarget =
-        null;
-
-
-    currentCallType =
-        null;
-
-
-    isScreenSharing =
-        false;
-
-
-    micEnabled =
-        true;
-
-
-    cameraEnabled =
-        true;
-
-
-    localVideo.srcObject =
-        null;
 
 
     remoteVideo.srcObject =
@@ -2647,72 +2330,197 @@ function cleanupCall() {
         null;
 
 
-    localVideo.style.display =
-        "none";
+    localVideo.srcObject =
+        null;
 
 
-    remoteVideo.style.display =
-        "none";
+    pendingCandidates =
+        [];
 
 
-    remotePlaceholder.style.display =
-        "flex";
+    stopTimer();
 
 
-    callPanel.classList.remove(
-        "active"
-    );
+    callState =
+        "idle";
 
 
-    screenButton.classList.remove(
-        "active"
+    currentTarget =
+        null;
+
+
+    currentTargetName =
+        "";
+
+
+    muteButton.classList.remove(
+        "disabled"
     );
 
 
     cameraButton.classList.remove(
-        "active"
+        "disabled"
     );
 
 
-    micButton.classList.remove(
-        "active"
+    muteButton.querySelector(
+        "span"
+    ).textContent =
+        "Mikrofon";
+
+
+    cameraButton.querySelector(
+        "span"
+    ).textContent =
+        "Kamera";
+
+
+    callOverlay.classList.remove(
+        "show"
     );
 
 
-    incomingCallData =
-        null;
-
-
-    incomingCall.classList.remove(
-        "active"
+    incomingOverlay.classList.remove(
+        "show"
     );
 
 }
 
 
-remoteVideo.addEventListener(
-    "loadedmetadata",
-    async () => {
+muteButton.onclick =
+    () => {
 
         console.log(
-            "REMOTE VIDEO METADATA HAZIR"
+            "MİKROFON BUTONU"
         );
 
 
-        try {
+        if (!localStream) {
 
-            await remoteVideo.play();
+            return;
+
+        }
 
 
-            console.log(
-                "REMOTE VIDEO PLAY BAŞARILI"
-            );
+        const tracks =
+            localStream.getAudioTracks();
 
-        } catch (error) {
 
-            console.error(
-                "REMOTE VIDEO PLAY HATASI:",
-                error
+        if (!tracks.length) {
+
+            return;
+
+        }
+
+
+        const enabled =
+            !tracks[0].enabled;
+
+
+        tracks.forEach(
+            track => {
+
+                track.enabled =
+                    enabled;
+
+            }
+        );
+
+
+        muteButton.classList.toggle(
+            "disabled",
+            !enabled
+        );
+
+
+        muteButton.querySelector(
+            "span"
+        ).textContent =
+            enabled
+                ? "Mikrofon"
+                : "Sessiz";
+
+
+        console.log(
+            "MİKROFON:",
+            enabled
+        );
+
+    };
+
+
+cameraButton.onclick =
+    () => {
+
+        if (!localStream) {
+
+            return;
+
+        }
+
+
+        const tracks =
+            localStream.getVideoTracks();
+
+
+        if (!tracks.length) {
+
+            return;
+
+        }
+
+
+        const enabled =
+            !tracks[0].enabled;
+
+
+        tracks.forEach(
+            track => {
+
+                track.enabled =
+                    enabled;
+
+            }
+        );
+
+
+        cameraButton.classList.toggle(
+            "disabled",
+            !enabled
+        );
+
+
+        cameraButton.querySelector(
+            "span"
+        ).textContent =
+            enabled
+                ? "Kamera"
+                : "Kapalı";
+
+    };
+
+
+hangupButton.onclick =
+    () => {
+
+        endCall(
+            true
+        );
+
+    };
+
+
+document.addEventListener(
+    "keydown",
+    event => {
+
+        if (
+            event.key === "Escape" &&
+            callState !== "idle"
+        ) {
+
+            endCall(
+                true
             );
 
         }
@@ -2721,67 +2529,9 @@ remoteVideo.addEventListener(
 );
 
 
-remoteVideo.addEventListener(
-    "canplay",
-    () => {
-
-        console.log(
-            "REMOTE VIDEO CANPLAY"
-        );
-
-
-        remoteVideo.play()
-            .catch(error => {
-
-                console.error(
-                    "CANPLAY PLAY HATASI:",
-                    error
-                );
-
-            });
-
-    }
+console.log(
+    "ANONIM CHAT JAVASCRIPT HAZIR"
 );
-
-
-remoteVideo.addEventListener(
-    "playing",
-    () => {
-
-        console.log(
-            "REMOTE VIDEO GERÇEKTEN OYNUYOR"
-        );
-
-        remotePlaceholder.style.display =
-            "none";
-
-    }
-);
-
-
-remoteVideo.addEventListener(
-    "error",
-    event => {
-
-        console.error(
-            "REMOTE VIDEO ERROR:",
-            event
-        );
-
-    }
-);
-
-
-screenButton.style.display =
-    "none";
-
-
-cameraButton.style.display =
-    "none";
-
-
-micButton.style.display =
-    "none";
 
 </script>
 
